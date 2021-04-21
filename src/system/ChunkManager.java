@@ -1,4 +1,7 @@
+package system;
+
 import com.rabbitmq.client.*;
+import utils.Chunk;
 
 public class ChunkManager {
 
@@ -13,7 +16,6 @@ public class ChunkManager {
 
     public ChunkManager(Chunk chunk){
         chunkNorris = chunk;
-        identifiant = chunkNorris.getIdentifiant();
         sysQueueName = "sysQueue"+Integer.toString(identifiant);
         managePlayerQueueName = "manageQueue"+Integer.toString(identifiant);
 
