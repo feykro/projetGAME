@@ -1,6 +1,7 @@
 package client;
 
 import com.rabbitmq.client.*;
+import utils.Chunk;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -10,9 +11,13 @@ import java.util.concurrent.TimeoutException;
 import static utils.ExchangeName.*;
 import static utils.QueueName.queuePortailRequestIDName;
 import static utils.QueueName.queuePortailRequestSpawnName;
+import static utils.MessageType.*;
 
 
 public class Player {
+
+    private Chunk plateau;
+
     private Channel portailRequest;
     private Channel id_response;
     private Channel chunk;
@@ -30,6 +35,8 @@ public class Player {
     public Player(String pseudo) throws IOException, TimeoutException {
 
         this.pseudo = pseudo;
+
+        this.plateau = new Chunk();
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
@@ -74,6 +81,8 @@ public class Player {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
+                        initPersonalQueueReciever();
+                        spawnRequest();
                     }
                 };
                 try {
@@ -127,8 +136,7 @@ public class Player {
 
         String queueChunkName = null;
         try {
-            String key = String.valueOf(getID());
-
+            String key = "Chunk"+chunkNumber;
             queueChunkName = chunk.queueDeclare().getQueue();
             chunk.queueBind(queueChunkName, ExchangeChunkPlayerName, key);
         } catch (IOException e) {
@@ -163,7 +171,26 @@ public class Player {
     }
 
     private void manageMessage(String message){
-        //Todo
+        String parter[] = message.split(" ");
+        assert(parter.length > 0);
+        String type = parter[0];
+        if(type.equals(update)){
+            assert(parter.length > 6);
+            int nb_update = Integer.parseInt(parter[1]);
+            for(int i=2;i<nb_update;i+=5){
+                plateau.freeCase(Integer.parseInt(parter[i+1]),Integer.parseInt(parter[i+2]));
+                plateau.occupeCase(Integer.parseInt(parter[i+3]), Integer.parseInt(parter[i+4]), parter[i]);
+            }
+        } else if(type.equals(leaving_player)){
+            assert(parter.length == 2);
+            plateau.freeCase(Integer.parseInt(parter[1]),Integer.parseInt(parter[2]));
+        } else if(type.equals(message_from)){
+            assert(parter.length == 2);
+            System.out.println(parter[1]+" : "+parter[2]);
+            //todo graphique part
+        } else {
+            System.out.println("Error : In Player Message Type unknown");
+        }
     }
 
 
