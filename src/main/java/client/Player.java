@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
 import static utils.ExchangeName.*;
-import static utils.QueueName.queuePortailRequestIDName;
-import static utils.QueueName.queuePortailRequestSpawnName;
 import static utils.MessageType.*;
 
 
@@ -45,11 +43,12 @@ public class Player {
         factory.setHost("localhost");
 
         connection = factory.newConnection();
+
         portailRequest = connection.createChannel();
         chunk = connection.createChannel();
         id_response = connection.createChannel();
 
-        portailRequest.exchangeDeclare(ExchangeIDRequestName, BuiltinExchangeType.DIRECT, true);
+        portailRequest.exchangeDeclare(ExchangePortailRequestName, BuiltinExchangeType.TOPIC, true);
         id_response.exchangeDeclare(ExchangeIDRespondName, BuiltinExchangeType.DIRECT, true);
         chunk.exchangeDeclare(ExchangeChunkPlayerName, BuiltinExchangeType.TOPIC, true);
         initReciveID();
@@ -58,8 +57,7 @@ public class Player {
 
     public void idRequest(){
         try {
-            portailRequest.queueBind(queuePortailRequestIDName, ExchangeIDRequestName, "");
-            portailRequest.basicPublish(ExchangeIDRequestName, "", null, null);
+            portailRequest.basicPublish(ExchangePortailRequestName, "ID", null, null);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -100,15 +98,14 @@ public class Player {
 
     public void spawnRequest(){
         try {
-            portailRequest.queueBind(queuePortailRequestSpawnName, ExchangeIDRequestName, "");
-            portailRequest.basicPublish(ExchangeIDRequestName, "", null, Integer.toString(id).getBytes("UTF-8"));
+            portailRequest.basicPublish(ExchangePortailRequestName, "SPAWN", null, Integer.toString(id).getBytes("UTF-8"));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void requestHelloChunk() {
-        String message = hello_chunk+" "+String.valueOf(getID());
+    public void requestHelloChunk(int x, int y) {
+        String message = hello_chunk+" "+String.valueOf(getID())+" "+getPseudo()+" "+x+" "+y;
         requestToChunk(message);
     }
 
@@ -163,6 +160,7 @@ public class Player {
     }
 
     public void initChunkQueueReciever(int chunkNumber){
+        System.out.println("mon chunk spawn est "+chunkNumber);
         currentChunkNumber = chunkNumber;
         String queueChunkName = null;
         try {
@@ -219,9 +217,9 @@ public class Player {
             System.out.println(parser[1]+" : "+parser[2]);
             //todo graphique part
         } else if(type.equals(hello_player)){
-            assert(parser.length == 2);
+            assert(parser.length == 4);
             initChunkQueueReciever(Integer.parseInt(parser[1]));
-            requestHelloChunk();
+            requestHelloChunk(Integer.parseInt(parser[2]),Integer.parseInt(parser[3]));
         } else {
             System.out.println("Error : In Player Message Type unknown");
         }
@@ -234,6 +232,10 @@ public class Player {
 
     private int getID(){
         return id;
+    }
+
+    private String getPseudo(){
+        return pseudo;
     }
 
 
