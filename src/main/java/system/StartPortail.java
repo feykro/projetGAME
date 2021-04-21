@@ -1,7 +1,5 @@
 package system;
 
-import client.Player;
-
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 

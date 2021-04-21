@@ -1,7 +1,6 @@
 package system;
 
 import com.rabbitmq.client.*;
-import com.rabbitmq.tools.json.JSONUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -74,9 +73,9 @@ public class Portail {
     }
 
     private String getFreeID(){
-        /*if(listID.size() > 0){
+        if(listID.size() > 0){
             return listID.remove(0);
-        }*/
+        }
         return "-1";
     }
 }
