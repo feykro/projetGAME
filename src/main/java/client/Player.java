@@ -18,6 +18,7 @@ public class Player {
     private Channel chunk;
 
     private String finalQueueIDrespondName;
+    private String finalQueueSysName;
 
     private String pseudo;
     private int id;
@@ -105,11 +106,40 @@ public class Player {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        String finalQueueSysName = queueChunkName;
+        finalQueueSysName = queueChunkName;
         new Thread() {
             public void run() {
                 DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                    String paquet = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                    String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                    manageMessage(message);
+                };
+                try {
+                    chunk.basicConsume(finalQueueSysName, true, deliverCallback, consumerTag -> {
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
+
+    public void initChunkQueueReciever(int chunkNumber){
+
+        String queueChunkName = null;
+        try {
+            String key = String.valueOf(getID());
+
+            queueChunkName = chunk.queueDeclare().getQueue();
+            chunk.queueBind(queueChunkName, ExchangeChunkPlayerName, key);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        finalQueueSysName = queueChunkName;
+        new Thread() {
+            public void run() {
+                DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                    String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                    manageMessage(message);
                 };
                 try {
                     chunk.basicConsume(finalQueueSysName, true, deliverCallback, consumerTag -> {
@@ -131,6 +161,11 @@ public class Player {
         }
         return false;
     }
+
+    private void manageMessage(String message){
+        //Todo
+    }
+
 
     private void setID(int id){
         this.id = id;
