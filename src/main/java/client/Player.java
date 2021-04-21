@@ -2,6 +2,7 @@ package client;
 
 import com.rabbitmq.client.*;
 import utils.Chunk;
+import utils.Direction;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +22,8 @@ public class Player {
     private Channel portailRequest;
     private Channel id_response;
     private Channel chunk;
+
+    private int currentChunkNumber;
 
     private String finalQueueIDrespondName;
     private String finalQueueSysName;
@@ -104,6 +107,33 @@ public class Player {
         }
     }
 
+    public void requestHelloChunk() {
+        String message = hello_chunk+" "+String.valueOf(getID());
+        requestToChunk(message);
+    }
+
+    public void requestMove(Direction direction) {
+        String message = move+" "+String.valueOf(getID())+" "+direction;
+        requestToChunk(message);
+    }
+
+    public void requestSay(Direction direction,String msg) {
+        String message = say+" "+String.valueOf(getID())+" "+direction+" "+msg;
+        requestToChunk(message);
+    }
+
+    public void requestLeaveGame(Direction direction,String msg) {
+        String message = leave+" "+String.valueOf(getID());
+        requestToChunk(message);
+    }
+
+    private void requestToChunk(String message){
+        try {
+            chunk.basicPublish(ExchangeChunkPlayerName, "ChunkManager"+currentChunkNumber, null, message.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void initPersonalQueueReciever(){
         String queueChunkName = null;
@@ -133,7 +163,7 @@ public class Player {
     }
 
     public void initChunkQueueReciever(int chunkNumber){
-
+        currentChunkNumber = chunkNumber;
         String queueChunkName = null;
         try {
             String key = "Chunk"+chunkNumber;
@@ -171,23 +201,27 @@ public class Player {
     }
 
     private void manageMessage(String message){
-        String parter[] = message.split(" ");
-        assert(parter.length > 0);
-        String type = parter[0];
+        String parser[] = message.split(" ");
+        assert(parser.length > 0);
+        String type = parser[0];
         if(type.equals(update)){
-            assert(parter.length > 6);
-            int nb_update = Integer.parseInt(parter[1]);
+            assert(parser.length > 6);
+            int nb_update = Integer.parseInt(parser[1]);
             for(int i=2;i<nb_update;i+=5){
-                plateau.freeCase(Integer.parseInt(parter[i+1]),Integer.parseInt(parter[i+2]));
-                plateau.occupeCase(Integer.parseInt(parter[i+3]), Integer.parseInt(parter[i+4]), parter[i]);
+                plateau.freeCase(Integer.parseInt(parser[i+1]),Integer.parseInt(parser[i+2]));
+                plateau.occupeCase(Integer.parseInt(parser[i+3]), Integer.parseInt(parser[i+4]), parser[i]);
             }
         } else if(type.equals(leaving_player)){
-            assert(parter.length == 2);
-            plateau.freeCase(Integer.parseInt(parter[1]),Integer.parseInt(parter[2]));
+            assert(parser.length == 3);
+            plateau.freeCase(Integer.parseInt(parser[1]),Integer.parseInt(parser[2]));
         } else if(type.equals(message_from)){
-            assert(parter.length == 2);
-            System.out.println(parter[1]+" : "+parter[2]);
+            assert(parser.length == 3);
+            System.out.println(parser[1]+" : "+parser[2]);
             //todo graphique part
+        } else if(type.equals(hello_player)){
+            assert(parser.length == 2);
+            initChunkQueueReciever(Integer.parseInt(parser[1]));
+            requestHelloChunk();
         } else {
             System.out.println("Error : In Player Message Type unknown");
         }

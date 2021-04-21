@@ -1,6 +1,6 @@
 package utils;
 
-public enum Deplacement {
+public enum Direction {
     SOUTH,
     NORTH,
     WEST,
