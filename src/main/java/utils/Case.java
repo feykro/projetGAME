@@ -2,14 +2,10 @@ package utils;
 
 import static utils.CaseState.*;
 
-enum CaseState{
-    libre,
-    reservee,
-    occupeeJoueur,
-    occupeeObstacle
-};
+;
 
 public class Case {
+
     private CaseState etat;
     private int playerID;
     private String playerPseudo;
@@ -50,11 +46,19 @@ public class Case {
     }
 
     public boolean reserve(int id) {
-        if(etat == libre){
+        if(etat != libre){
             return false;
         }
         playerID=id;
-        etat = occupeeJoueur;
+        etat = reservee;
+        return true;
+    }
+
+    public boolean setObstacle(){
+        if(etat != libre){
+            return false;
+        }
+        etat = occupeeObstacle;
         return true;
     }
 
@@ -68,7 +72,7 @@ public class Case {
         return true;
     }
 
-
-
-
+    public CaseState getEtat() {
+        return etat;
+    }
 }

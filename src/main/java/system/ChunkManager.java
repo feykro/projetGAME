@@ -192,7 +192,7 @@ public class ChunkManager {
         int[] pos = chunk.findFreeCase();
         if(pos[0] != -1){
             //On bloque la position du joueur dans la grille
-            chunk.reserveCase(pos[0], pos[1]);
+            //chunk.reserveCase(pos[0], pos[1]);
         }
         return pos;
     }

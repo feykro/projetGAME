@@ -1,6 +1,7 @@
 package utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Chunk {
     private int taille;
@@ -95,12 +96,18 @@ public class Chunk {
         c.reserve(id);
     }
 
+    public void addObstacle(int x, int y){
+        Case c = getCase(x, y);
+        c.setObstacle();
+    }
+
     public Case getCase(int id){
         for(int i =0 ; i < taille*taille;i++){
 
         }
         return null;
     }
+
 
     public Case getCase(int x, int y){
         return tab[x*taille + y];
