@@ -111,20 +111,21 @@ public class ChunkManager {
             int nbChunkCounter = Integer.parseInt(parsedMsg[2]);
 
             if(nbChunkCounter >= 4) {
-                //TODO
-                //renvoyer erreur
+                //TODO : renvoyer au portail que c mor
                 System.out.println("Pas de place disponible \n");
                 return;
             }
 
             nbChunkCounter++;
             //rechercher une place
-            int[] coor = playerSpawnFinder();
+            int[] coor = playerSpawnFinder(playerID);
             if(coor[0] == -1){
                 //TODO
                 //Faut aller chercher une place ailleurs
+                return;
             }else{
-                //TODO : renvoyer au joueur la position
+                //TODO : renvoyer au portail la position
+                return;
             }
         }
 
@@ -143,6 +144,7 @@ public class ChunkManager {
         if(parsedMsg[0].compareTo(free_ID) == 0){
             int playerID = Integer.parseInt(parsedMsg[2]);
             //todo: libérer le joueur auprès du portail
+
             return;
         }
         //return an error
@@ -188,11 +190,11 @@ public class ChunkManager {
      * Trouver une place pour le joueur dans le chunk et renvoie la coordonnée
      * Sinon, renvoie -1, -1
      */
-    private int[] playerSpawnFinder(){
+    private int[] playerSpawnFinder(int playerID){
         int[] pos = chunk.findFreeCase();
         if(pos[0] != -1){
             //On bloque la position du joueur dans la grille
-            chunk.reserveCase(pos[0], pos[1]);
+            chunk.reserveCase(pos[0], pos[1], playerID);
         }
         return pos;
     }

@@ -19,6 +19,37 @@ public class Chunk {
         tabInit();
     }
 
+//==========- methods -============
+
+//==========- find ... -===========
+
+    public int[] findFreeCase(){
+        int[] res = {-1, -1};
+        for(int y=0; y<this.taille; y++){
+            for(int x=0; x<this.taille; x++){
+                Case current = getCase(x, y);
+                if(!current.isOccupied()){
+                    res[0] = x;
+                    res[1] = y;
+                    return res;
+                }
+            }
+        }
+        return res;
+    }
+
+    public Case findIdCase(int id){
+        for(int y=0; y<taille; y++){
+            for(int x=0; x<taille; x++){
+                Case c = getCase(x, y);
+                if(c.getPlayerID() == id){
+                    return c;
+                }
+            }
+        }
+        return null;
+    }
+
     public void tabInit(){
         for(int j=0; j<taille; j++){
             for(int i=0; i<taille; i++){
@@ -27,6 +58,39 @@ public class Chunk {
             }
         }
     }
+
+//==========- free ... -============
+
+    public boolean freeCase(int x, int y){
+        if(x<taille && y < taille){
+            getCase(x,y).free();
+            return true;
+        }
+        return false;
+    }
+
+    public void freeUserCase(int id){
+        Case c = findIdCase(id);
+        c.free();
+    }
+
+//=========- populate a case -============
+
+    public boolean occupeCase(int x, int y,int id, String pseudo){
+        if(x<taille && y < taille){
+            getCase(x,y).occupe(id,pseudo);
+            return true;
+        }
+        return false;
+    }
+
+
+    public void reserveCase(int x, int y,int id){
+        Case c = getCase(x, y);
+        c.reserve(id);
+    }
+
+ //============- display -===============
 
     public void showChunk(){
         for(int i=0; i< taille ; i++){
@@ -51,64 +115,13 @@ public class Chunk {
         System.out.println("-");
     }
 
-    public boolean setCase(int x, int y, Case c){
-        if(x<taille && y < taille){
-            tab[y*taille + x]=c;
-            return true;
-        }
-        return false;
-    }
-
-    public boolean occupeCase(int x, int y,int id, String pseudo){
-        if(x<taille && y < taille){
-            getCase(x,y).occupe(id,pseudo);
-            return true;
-        }
-        return false;
-    }
-
-    public boolean freeCase(int x, int y){
-        if(x<taille && y < taille){
-            getCase(x,y).free();
-            return true;
-        }
-        return false;
-    }
-
-    public int[] findFreeCase(){
-        int[] res = {-1, -1};
-        for(int y=0; y<this.taille; y++){
-            for(int x=0; x<this.taille; x++){
-                Case current = getCase(x, y);
-                if(!current.isOccupied()){
-                    res[0] = x;
-                    res[1] = y;
-                    return res;
-                }
-            }
-        }
-        return res;
-    }
-
-    public void reserveCase(int x, int y,int id){
-        Case c = getCase(x, y);
-        c.reserve(id);
-    }
-
-    public Case getCase(int id){
-        for(int i =0 ; i < taille*taille;i++){
-
-        }
-        return null;
-    }
+    /* ======================================
+    =       getter and setter methods       =
+    ========================================= */
 
     public Case getCase(int x, int y){
         return tab[x*taille + y];
     }
-
-    /* ======================================
-    =       getter and setter methods       =
-    ========================================= */
 
     public int getTaille() {
         return taille;
@@ -116,5 +129,13 @@ public class Chunk {
 
     public Case[] getTab() {
         return tab;
+    }
+
+    public boolean setCase(int x, int y, Case c){
+        if(x<taille && y < taille){
+            tab[y*taille + x]=c;
+            return true;
+        }
+        return false;
     }
 }
