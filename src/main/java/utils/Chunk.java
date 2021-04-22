@@ -22,7 +22,7 @@ public class Chunk {
     public void tabInit(){
         for(int j=0; j<taille; j++){
             for(int i=0; i<taille; i++){
-                Case c = new Case(false);
+                Case c = new Case();
                 tab[j*taille + i] = c;
             }
         }
