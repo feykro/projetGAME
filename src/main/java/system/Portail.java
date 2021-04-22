@@ -84,7 +84,8 @@ public class Portail {
                 DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                     String id = new String(delivery.getBody(), StandardCharsets.UTF_8);
                     int managerRDM = Integer.parseInt(id)%4;
-                    String message = find_spawn+" "+id;
+                    String message = find_spawn+" "+id+" "+managerRDM;
+                    System.out.println("Sending message : "+message);
                     sys.basicPublish(ExchangeSysName, "Chunk"+managerRDM, null, message.getBytes("UTF-8"));
                 };
                 try {

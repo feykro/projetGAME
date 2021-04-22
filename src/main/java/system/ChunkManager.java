@@ -16,6 +16,7 @@ public class ChunkManager {
 
     private int id;
     private Chunk chunk;
+    private int searchCounter = 0;
 
     private Channel chunkPlayers;
     private Channel sys;
@@ -38,7 +39,7 @@ public class ChunkManager {
         chunkPlayers = connection.createChannel();
 
         sys.exchangeDeclare(ExchangeSysName, BuiltinExchangeType.TOPIC,true);
-        chunkPlayers.exchangeDeclare(playerQueueName, BuiltinExchangeType.DIRECT,true);
+        chunkPlayers.exchangeDeclare(ExchangeChunkPlayerName, BuiltinExchangeType.TOPIC,true);
 
         initSysRecepteur();
         initPlayerRecepteur();
@@ -74,8 +75,8 @@ public class ChunkManager {
 
     private void initPlayerRecepteur(){
         try {
-            sys.queueDeclare(playerQueueName, true, false, false, null);
-            sys.queueBind(playerQueueName, ExchangeSysName, chunkTopic);
+            chunkPlayers.queueDeclare(playerQueueName, true, false, false, null);
+            chunkPlayers.queueBind(playerQueueName, ExchangeChunkPlayerName, chunkTopic);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -90,7 +91,7 @@ public class ChunkManager {
                     playerAction(parsedMessage);
                 };
                 try {
-                    sys.basicConsume(finalQueuePlayerName, true, deliverCallback, consumerTag -> {
+                    chunkPlayers.basicConsume(finalQueuePlayerName, true, deliverCallback, consumerTag -> {
                     });
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -105,6 +106,28 @@ public class ChunkManager {
     private void sysAction(String [] parsedMsg){
         System.out.println("Coucou jean mich");
 
+        if(parsedMsg[0].equals(find_spawn)){
+            int playerID = Integer.parseInt(parsedMsg[1]);
+            int nbChunkCounter = Integer.parseInt(parsedMsg[2]);
+
+            if(nbChunkCounter >= 4) {
+                //TODO
+                //renvoyer erreur
+                System.out.println("Pas de place disponible \n");
+                return;
+            }
+
+            nbChunkCounter++;
+            //rechercher une place
+            int[] coor = playerSpawnFinder();
+            if(coor[0] == -1){
+                //TODO
+                //Faut aller chercher une place ailleurs
+            }else{
+                //TODO : renvoyer au joueur la position
+            }
+        }
+
         if(parsedMsg[0].compareTo(player_Enter) ==0){
             int playerID = Integer.parseInt(parsedMsg[1]);
             int x = Integer.parseInt(parsedMsg[2]);
@@ -112,21 +135,14 @@ public class ChunkManager {
 
             System.out.println("Player "+playerID+" is trying to enter\n");
             //gérer l'arrivée d'un nouveau joueur
+            boolean canEnter = playerEnterManager(playerID, x, y);
+            //todo: renvoyer ça au chunk dont le joueur est originaire
             return;
         }
-        if(parsedMsg[0].compareTo(find_spawn) == 0){
-            int playerID = Integer.parseInt(parsedMsg[1]);
-            int firstChunkID = Integer.parseInt(parsedMsg[2]);
-            if(firstChunkID == this.id){
-                //renvoyer erreur
-                System.out.println("Pas de place disponible \n");
-                return;
-            }
-            return;
-        }
+
         if(parsedMsg[0].compareTo(free_ID) == 0){
             int playerID = Integer.parseInt(parsedMsg[2]);
-            //libérer le joueur
+            //todo: libérer le joueur auprès du portail
             return;
         }
         //return an error
@@ -137,12 +153,13 @@ public class ChunkManager {
      * Function called to react to a player query
      */
     private void playerAction(String [] parsedMsg){
-        if(parsedMsg[0].compareTo(hello_chunk) == 0){
-            String playerID = parsedMsg[1];
-            String playerPseydo = parsedMsg[2];
-            String x = parsedMsg[3];
-            String y = parsedMsg[4];
+        if(parsedMsg[0].equals(hello_chunk)){
+            int playerID = Integer.parseInt(parsedMsg[1]);
+            String playerPseudo = parsedMsg[2];
+            int x = Integer.parseInt(parsedMsg[3]);
+            int y = Integer.parseInt(parsedMsg[4]);
             //spawn player position in the chunk I guess
+            chunk.occupeCase(x, y, playerPseudo);
             return;
         }
         if(parsedMsg[0].compareTo(move) == 0){
@@ -167,4 +184,27 @@ public class ChunkManager {
         System.out.println("Error : unexpected player action received.\n");
     }
 
+    /**
+     * Trouver une place pour le joueur dans le chunk et renvoie la coordonnée
+     * Sinon, renvoie -1, -1
+     */
+    private int[] playerSpawnFinder(){
+        int[] pos = chunk.findFreeCase();
+        if(pos[0] != -1){
+            //On bloque la position du joueur dans la grille
+            chunk.reserveCase(pos[0], pos[1]);
+        }
+        return pos;
+    }
+
+    private boolean playerEnterManager(int playerID, int x, int y){
+        //On occupe la case avec le joueur
+        boolean test = !chunk.getCase(x, y).isOccupied();
+        //todo : notify area that new player is arriving
+        if(test){
+            //on réserve l'arrivée
+            chunk.reserveCase(x, y);
+        }
+        return test;
+    }
 }

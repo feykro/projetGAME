@@ -51,6 +51,15 @@ public class Chunk {
         System.out.println("-");
     }
 
+    /**
+     * Réserve une case pour préparer l'arrivée d'un joueur
+     * @param x, y les coordonnées de la case
+     */
+    public void reserveCase(int x, int y){
+        Case c = getCase(x, y);
+        c.setEtat(CaseState.reservee);
+    }
+
     public boolean setCase(int x, int y, Case c){
         if(x<taille && y < taille){
             tab[y*taille + x]=c;
@@ -59,9 +68,13 @@ public class Chunk {
         return false;
     }
 
+    /**
+     * Occupe la case avec le pseudo
+     */
     public boolean occupeCase(int x, int y, String pseudo){
         if(x<taille && y < taille){
             getCase(x,y).occupe(pseudo);
+            getCase(x, y).setEtat(CaseState.occupeeJoueur);
             return true;
         }
         return false;
@@ -75,7 +88,20 @@ public class Chunk {
         return false;
     }
 
-
+    public int[] findFreeCase(){
+        int[] res = {-1, -1};
+        for(int y=0; y<this.taille; y++){
+            for(int x=0; x<this.taille; x++){
+                Case current = getCase(x, y);
+                if(!current.isOccupied()){
+                    res[0] = x;
+                    res[1] = y;
+                    return res;
+                }
+            }
+        }
+        return res;
+    }
 
     public Case getCase(int x, int y){
         return tab[x*taille + y];
