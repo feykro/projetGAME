@@ -85,7 +85,9 @@ public class Portail {
                     String id = new String(delivery.getBody(), StandardCharsets.UTF_8);
                     int managerRDM = Integer.parseInt(id)%4;
                     String message = find_spawn+" "+id;
-                    sys.basicPublish(ExchangeSysName, queueChunkSysBasename+managerRDM, null, message.getBytes("UTF-8"));
+                    System.out.println("Looking for spawn with following message : "+message);
+
+                    sys.basicPublish(ExchangeSysName, , null, message.getBytes("UTF-8"));
                 };
                 try {
                     sys.basicConsume(finalQueueSysName, true, deliverCallback, consumerTag -> {
