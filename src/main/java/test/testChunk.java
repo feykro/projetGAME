@@ -7,7 +7,7 @@ public class testChunk {
 
     public static void main(String[] args) {
         Chunk plateau = new Chunk(5);
-        plateau.setCase(2,3,new Case(true));
+        plateau.setCase(2,3,new Case());
         plateau.showChunk();
         return;
     }

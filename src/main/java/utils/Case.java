@@ -1,7 +1,5 @@
 package utils;
 
-import static utils.CaseState.*;
-
 enum CaseState{
     libre,
     reservee,
@@ -18,7 +16,7 @@ public class Case {
     public Case(){
         playerPseudo=null;
         playerID=-1;
-        etat = libre;
+        etat = CaseState.libre;
     }
 
     /* ======================================
@@ -27,44 +25,44 @@ public class Case {
 
 
     public boolean isOccupied() {
-        return etat != libre;
+        return etat != CaseState.libre;
     }
 
     public String getPlayerPseudo(){
-        assert(etat == occupeeJoueur);
+        assert(etat == CaseState.occupeeJoueur);
         return playerPseudo;
     }
     public int getPlayerID(){
-        assert(etat == occupeeJoueur);
+        assert(etat == CaseState.occupeeJoueur);
         return playerID;
     }
 
     public boolean occupe(int id,String pseudo) {
-        if(etat == occupeeJoueur || etat == occupeeObstacle || (etat == reservee && id != playerID)){
+        if(etat == CaseState.occupeeJoueur || etat == CaseState.occupeeObstacle || (etat == CaseState.reservee && id != playerID)){
             return false;
         }
         playerID=id;
         playerPseudo=pseudo;
-        etat = occupeeJoueur;
+        etat = CaseState.occupeeJoueur;
         return true;
     }
 
     public boolean reserve(int id) {
-        if(etat == libre){
+        if(etat == CaseState.libre){
             return false;
         }
         playerID=id;
-        etat = occupeeJoueur;
+        etat = CaseState.occupeeJoueur;
         return true;
     }
 
     public boolean free() {
-        if(etat == occupeeJoueur){
+        if(etat == CaseState.occupeeJoueur){
             return false;
         }
         playerID=-1;
         playerPseudo=null;
-        etat = libre;
+        etat = CaseState.libre;
         return true;
     }
 
