@@ -21,6 +21,12 @@ public class Chunk {
 
 //==========- methods -============
 
+    public boolean isValideMovement(int playerID, String Direction){
+        Case c = findIdCase(playerID);
+
+        return !c.isOccupied();
+    }
+
 //==========- find ... -===========
 
     public int[] findFreeCase(){
@@ -50,15 +56,6 @@ public class Chunk {
         return null;
     }
 
-    public void tabInit(){
-        for(int j=0; j<taille; j++){
-            for(int i=0; i<taille; i++){
-                Case c = new Case();
-                tab[j*taille + i] = c;
-            }
-        }
-    }
-
 //==========- free ... -============
 
     public boolean freeCase(int x, int y){
@@ -84,11 +81,20 @@ public class Chunk {
         return false;
     }
 
-
     public void reserveCase(int x, int y,int id){
         Case c = getCase(x, y);
         c.reserve(id);
     }
+
+ //===========- init -==================
+ public void tabInit(){
+     for(int j=0; j<taille; j++){
+         for(int i=0; i<taille; i++){
+             Case c = new Case();
+             tab[j*taille + i] = c;
+         }
+     }
+ }
 
  //============- display -===============
 

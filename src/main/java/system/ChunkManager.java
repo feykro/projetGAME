@@ -136,7 +136,7 @@ public class ChunkManager {
 
             System.out.println("Player "+playerID+" is trying to enter\n");
             //gérer l'arrivée d'un nouveau joueur
-            boolean canEnter = playerEnterManager(playerID, x, y);
+            boolean canEnter = playerEnterTester(playerID, x, y);
             //todo: renvoyer ça au chunk dont le joueur est originaire
             return;
         }
@@ -144,7 +144,7 @@ public class ChunkManager {
         if(parsedMsg[0].compareTo(free_ID) == 0){
             int playerID = Integer.parseInt(parsedMsg[2]);
             //todo: libérer le joueur auprès du portail
-
+            chunk.freeUserCase(playerID);
             return;
         }
         //return an error
@@ -164,22 +164,28 @@ public class ChunkManager {
             chunk.occupeCase(x, y,playerID, playerPseudo);
             return;
         }
+
         if(parsedMsg[0].compareTo(move) == 0){
             String playerID = parsedMsg[1];
             String direction = parsedMsg[2];
-            //update player position in the chunk
+            //todo: vérifier si la case résultante est libre
+            //todo: occuper la case résultante et libérer l'ancienne
+            //todo: update player position for everyone
+
             return;
         }
+
         if(parsedMsg[0].compareTo(say) == 0){
             String playerID = parsedMsg[1];
             String direction = parsedMsg[2];
             String message = parsedMsg[3];
-            //say hello to another player
+            //todo: check if there's a player in pointed direction
+            //todo: send message to player
             return;
         }
         if(parsedMsg[0].compareTo(leave) == 0){
             String playerID = parsedMsg[1];
-            //make player leave
+            //je comprends pas a quoi sert free id dans sysAction
             return;
         }
         //return an error
@@ -199,7 +205,7 @@ public class ChunkManager {
         return pos;
     }
 
-    private boolean playerEnterManager(int playerID, int x, int y){
+    private boolean playerEnterTester(int playerID, int x, int y){
         //On occupe la case avec le joueur
         boolean test = !chunk.getCase(x, y).isOccupied();
         //todo : notify area that new player is arriving
