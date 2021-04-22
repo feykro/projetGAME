@@ -1,5 +1,7 @@
 package utils;
 
+import static utils.CaseState.*;
+
 enum CaseState{
     libre,
     reservee,
@@ -8,15 +10,15 @@ enum CaseState{
 };
 
 public class Case {
-    private boolean isOccupied;
     private CaseState etat;
+    private int playerID;
     private String playerPseudo;
     //pour la partie graphique, lui associer une texture
 
-    public Case(boolean occ){
+    public Case(){
         playerPseudo=null;
-        isOccupied = occ;
-        etat = CaseState.libre;
+        playerID=-1;
+        etat = libre;
     }
 
     /* ======================================
@@ -25,34 +27,48 @@ public class Case {
 
 
     public boolean isOccupied() {
-        return isOccupied;
+        return etat != libre;
     }
 
-    public String getPlayerPseudo(){return playerPseudo;}
-
-    public void setOccupied(boolean occupied) {
-        isOccupied = occupied;
-        playerPseudo=null;
+    public String getPlayerPseudo(){
+        assert(etat == occupeeJoueur);
+        return playerPseudo;
+    }
+    public int getPlayerID(){
+        assert(etat == occupeeJoueur);
+        return playerID;
     }
 
-    public void occupe(String pseudo) {
-        isOccupied = true;
-        playerPseudo=pseudo;
-    }
-
-    public void setEtat(CaseState newEtat){
-        this.etat = newEtat;
-        switch (newEtat){
-            case reservee:
-            case occupeeJoueur:
-            case occupeeObstacle:
-                this.isOccupied = true;
-                break;
-            default:
-                this.isOccupied = false;
-                break;
+    public boolean occupe(int id,String pseudo) {
+        if(etat == occupeeJoueur || etat == occupeeObstacle || (etat == reservee && id != playerID)){
+            return false;
         }
+        playerID=id;
+        playerPseudo=pseudo;
+        etat = occupeeJoueur;
+        return true;
     }
+
+    public boolean reserve(int id) {
+        if(etat == libre){
+            return false;
+        }
+        playerID=id;
+        etat = occupeeJoueur;
+        return true;
+    }
+
+    public boolean free() {
+        if(etat == occupeeJoueur){
+            return false;
+        }
+        playerID=-1;
+        playerPseudo=null;
+        etat = libre;
+        return true;
+    }
+
+
 
 
 }

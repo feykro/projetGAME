@@ -281,7 +281,7 @@ public class Player {
             }
             //todo graphique part
         } else if (type.equals(leaving_player)) {
-            assert (parser.length == 3);
+            assert (parser.length == 2);
             plateau.freeCase(Integer.parseInt(parser[1]), Integer.parseInt(parser[2]));
             //todo graphique part
         } else if (type.equals(message_from)) {

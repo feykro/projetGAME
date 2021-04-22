@@ -159,7 +159,7 @@ public class ChunkManager {
             int x = Integer.parseInt(parsedMsg[3]);
             int y = Integer.parseInt(parsedMsg[4]);
             //spawn player position in the chunk I guess
-            chunk.occupeCase(x, y, playerPseudo);
+            chunk.occupeCase(x, y,playerID, playerPseudo);
             return;
         }
         if(parsedMsg[0].compareTo(move) == 0){
@@ -203,7 +203,7 @@ public class ChunkManager {
         //todo : notify area that new player is arriving
         if(test){
             //on réserve l'arrivée
-            chunk.reserveCase(x, y);
+            chunk.reserveCase(x, y,playerID);
         }
         return test;
     }

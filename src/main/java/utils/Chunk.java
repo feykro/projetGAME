@@ -59,9 +59,9 @@ public class Chunk {
         return false;
     }
 
-    public boolean occupeCase(int x, int y, String pseudo){
+    public boolean occupeCase(int x, int y,int id, String pseudo){
         if(x<taille && y < taille){
-            getCase(x,y).occupe(pseudo);
+            getCase(x,y).occupe(id,pseudo);
             return true;
         }
         return false;
@@ -69,13 +69,38 @@ public class Chunk {
 
     public boolean freeCase(int x, int y){
         if(x<taille && y < taille){
-            getCase(x,y).setOccupied(false);
+            getCase(x,y).free();
             return true;
         }
         return false;
     }
 
+    public int[] findFreeCase(){
+        int[] res = {-1, -1};
+        for(int y=0; y<this.taille; y++){
+            for(int x=0; x<this.taille; x++){
+                Case current = getCase(x, y);
+                if(!current.isOccupied()){
+                    res[0] = x;
+                    res[1] = y;
+                    return res;
+                }
+            }
+        }
+        return res;
+    }
 
+    public void reserveCase(int x, int y,int id){
+        Case c = getCase(x, y);
+        c.reserve(id);
+    }
+
+    public Case getCase(int id){
+        for(int i =0 ; i < taille*taille;i++){
+
+        }
+        return null;
+    }
 
     public Case getCase(int x, int y){
         return tab[x*taille + y];
