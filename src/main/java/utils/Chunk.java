@@ -59,13 +59,14 @@ public class Chunk {
         return false;
     }
 
-    public boolean occupeCase(int x, int y, String pseudo){
+    public boolean occupeCase(int x, int y,int id, String pseudo){
         if(x<taille && y < taille){
             getCase(x,y).occupe(pseudo);
             return true;
         }
         return false;
     }
+
 
     public boolean freeCase(int x, int y){
         if(x<taille && y < taille){

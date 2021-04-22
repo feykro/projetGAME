@@ -273,15 +273,17 @@ public class Player {
         assert (parser.length > 0);
         String type = parser[0];
         if (type.equals(update)) {
-            assert (parser.length > 6);
+            assert (parser.length > 7);
             int nb_update = Integer.parseInt(parser[1]);
             for (int i = 2; i < nb_update; i += 5) {
-                plateau.freeCase(Integer.parseInt(parser[i + 1]), Integer.parseInt(parser[i + 2]));
-                plateau.occupeCase(Integer.parseInt(parser[i + 3]), Integer.parseInt(parser[i + 4]), parser[i]);
+                plateau.freeCase(Integer.parseInt(parser[i + 2]), Integer.parseInt(parser[i + 3]));
+                plateau.occupeCase(Integer.parseInt(parser[i + 4]), Integer.parseInt(parser[i + 5]),Integer.parseInt(parser[i]), parser[i+1]);
             }
+            //todo graphique part
         } else if (type.equals(leaving_player)) {
             assert (parser.length == 3);
             plateau.freeCase(Integer.parseInt(parser[1]), Integer.parseInt(parser[2]));
+            //todo graphique part
         } else if (type.equals(message_from)) {
             assert (parser.length == 3);
             System.out.println(parser[1] + " : " + parser[2]);
@@ -290,6 +292,7 @@ public class Player {
             assert (parser.length == 4);
             initChunkQueueReciever(Integer.parseInt(parser[1]));
             requestHelloChunk(Integer.parseInt(parser[2]), Integer.parseInt(parser[3]));
+            //todo graphique part
         } else {
             System.out.println("Error : In Player Message Type unknown");
         }
