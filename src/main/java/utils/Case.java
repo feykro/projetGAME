@@ -66,7 +66,7 @@ public class Case {
         return true;
     }
 
-
-
-
+    public CaseState getEtat() {
+        return etat;
+    }
 }

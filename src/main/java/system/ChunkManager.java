@@ -166,9 +166,11 @@ public class ChunkManager {
         }
 
         if(parsedMsg[0].compareTo(move) == 0){
-            String playerID = parsedMsg[1];
+            int playerID = Integer.parseInt(parsedMsg[1]);
             String direction = parsedMsg[2];
-            //todo: vérifier si la case résultante est libre
+            //vérifier si la case résultante est libre
+            boolean isValid = chunk.isValidMovement(playerID, direction);
+            //todo: vérifier si on sort du chunk, si oui contacter le chunk approprié
             //todo: occuper la case résultante et libérer l'ancienne
             //todo: update player position for everyone
 
@@ -176,10 +178,11 @@ public class ChunkManager {
         }
 
         if(parsedMsg[0].compareTo(say) == 0){
-            String playerID = parsedMsg[1];
+            int playerID = Integer.parseInt(parsedMsg[1]);
             String direction = parsedMsg[2];
             String message = parsedMsg[3];
             //todo: check if there's a player in pointed direction
+            int[] coordTalk = chunk.isValidTalk(playerID, direction);
             //todo: send message to player
             return;
         }
