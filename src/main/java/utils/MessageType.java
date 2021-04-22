@@ -13,7 +13,4 @@ public class MessageType {
     public static String find_spawn ="FIND_SPAWN";
     public static String free_ID ="FREE_ID";
 
-
-
-
 }

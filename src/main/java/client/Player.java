@@ -91,7 +91,7 @@ public class Player {
     }
 
     /**
-     * Initialise personal queue to sub on his id to take specifique message from chunk/portal
+     * Initialise personal queue to sub on his id to take specific message from chunk/portal
      */
     public void initPersonalQueueReciever() {
         String queueChunkName = null;
