@@ -80,7 +80,7 @@ public class ChunkManager {
             e.printStackTrace();
         }
 
-        String finalQueueSysName = playerQueueName;
+        String finalQueuePlayerName = playerQueueName;
         new Thread() {
             public void run() {
                 DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -90,7 +90,7 @@ public class ChunkManager {
                     playerAction(parsedMessage);
                 };
                 try {
-                    sys.basicConsume(finalQueueSysName, true, deliverCallback, consumerTag -> {
+                    sys.basicConsume(finalQueuePlayerName, true, deliverCallback, consumerTag -> {
                     });
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -104,10 +104,13 @@ public class ChunkManager {
      */
     private void sysAction(String [] parsedMsg){
         System.out.println("Coucou jean mich");
+
         if(parsedMsg[0].compareTo(player_Enter) ==0){
             int playerID = Integer.parseInt(parsedMsg[1]);
             int x = Integer.parseInt(parsedMsg[2]);
             int y = Integer.parseInt(parsedMsg[3]);
+
+            System.out.println("Player "+playerID+" is trying to enter\n");
             //gérer l'arrivée d'un nouveau joueur
             return;
         }
