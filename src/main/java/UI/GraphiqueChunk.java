@@ -30,6 +30,8 @@ public class GraphiqueChunk extends JFrame{
     private Image imgStone = Toolkit.getDefaultToolkit().getImage("resources/cayou.png");
     private Image imgCross = Toolkit.getDefaultToolkit().getImage("resources/lacroix.png");
     private Image imgGrass = Toolkit.getDefaultToolkit().getImage("resources/grass1.png");
+    private Image imgGrassStone = Toolkit.getDefaultToolkit().getImage("resources/grassCayou.png");
+    private Image imgGrassSpawn = Toolkit.getDefaultToolkit().getImage("resources/grassSpawning.png");
 
 
 
@@ -52,51 +54,49 @@ public class GraphiqueChunk extends JFrame{
 
     public void paint(Graphics g){
         g.clearRect(0,0,900,900);
-        drawGrille(g);
-        for(int x = 0;x< taille;x++) {
-            for (int y = 0; y < taille; y++) {
-                switch(plateau.getCase(x,y).getEtat()){
-                    case libre -> {
-                        break;
-                    }
-                    case reservee -> {
-                        g.setColor(Color.gray);
-                        g.fillRect(bordersize+x*((getWidth()-bordersize*2)/taille),barsize+bordersize+y*((getHeight()-barsize-bordersize*2)/taille),(getWidth()-bordersize*2)/taille,((getHeight()-bordersize*2 - barsize)/taille));
-                        int locationIMG[] = getLocation(x, y);
-                        g.drawImage(imgCross, locationIMG[0]+2, locationIMG[1]+15, this);
-                        break;
-                    }
-                    case occupeeJoueur -> {
-                        int locationIMG[] = getLocation(x, y);
-                        g.drawImage(imgDOWN, locationIMG[0], locationIMG[1], this);
-                        String pseudo = plateau.getCase(x,y).getPlayerPseudo();
-
-                        g.clearRect(locationIMG[0]+ 20, locationIMG[1]+10,pseudo.length()*12,20);
-                        g.setFont(new Font("Serif",Font.PLAIN,20));
-                        g.drawString(pseudo,locationIMG[0]+ 20, locationIMG[1]+25);
-                        break;
-                    }
-                    case occupeeObstacle -> {
-                        g.setColor(Color.BLACK);
-                        g.fillRect(bordersize+x*((getWidth()-bordersize*2)/taille),barsize+bordersize+y*((getHeight()-barsize-bordersize*2)/taille),(getWidth()-bordersize*2)/taille,((getHeight()-bordersize*2 - barsize)/taille));
-                        int locationIMG[] = getLocation(x, y);
-                        g.drawImage(imgStone, locationIMG[0], locationIMG[1]+30, this);
-                        break;
+        if(plateau!=null) {
+            for (int x = 0; x < taille; x++) {
+                for (int y = 0; y < taille; y++) {
+                    switch (plateau.getCase(x, y).getEtat()) {
+                        case libre -> {
+                            g.drawImage(imgGrass, bordersize + x * ((getWidth() - bordersize * 2) / taille), barsize + bordersize + y * ((getHeight() - barsize - bordersize * 2) / taille), this);
+                            break;
+                        }
+                        case reservee -> {
+                            int locationIMG[] = getLocation(x, y);
+                            g.drawImage(imgGrassSpawn, bordersize + x * ((getWidth() - bordersize * 2) / taille), barsize + bordersize + y * ((getHeight() - barsize - bordersize * 2) / taille), this);
+                            g.drawImage(imgCross, locationIMG[0] + 2, locationIMG[1] + 15, this);
+                            break;
+                        }
+                        case occupeeJoueur -> {
+                            int locationIMG[] = getLocation(x, y);
+                            g.drawImage(imgGrass, bordersize + x * ((getWidth() - bordersize * 2) / taille), barsize + bordersize + y * ((getHeight() - barsize - bordersize * 2) / taille), this);
+                            g.drawImage(imgDOWN, locationIMG[0], locationIMG[1], this);
+                            String pseudo = plateau.getCase(x, y).getPlayerPseudo();
+                            g.clearRect(locationIMG[0] + 20, locationIMG[1] + 10, pseudo.length() * 12, 20);
+                            g.setFont(new Font("Serif", Font.PLAIN, 20));
+                            g.drawString(pseudo, locationIMG[0] + 20, locationIMG[1] + 25);
+                            break;
+                        }
+                        case occupeeObstacle -> {
+                            int locationIMG[] = getLocation(x, y);
+                            g.drawImage(imgGrassStone, bordersize + x * ((getWidth() - bordersize * 2) / taille), barsize + bordersize + y * ((getHeight() - barsize - bordersize * 2) / taille), this);
+                            break;
+                        }
                     }
                 }
             }
         }
+        drawGrille(g);
     }
 
 
     private void drawGrille(Graphics g){
         for(int width = 0;width< taille;width++) {
             for (int height = 0; height < taille; height++) {
-                g.drawImage(imgGrass,bordersize+width*((getWidth()-bordersize*2)/taille),barsize+bordersize+height*((getHeight()-barsize-bordersize*2)/taille), this);
                 g.drawRect(bordersize+width*((getWidth()-bordersize*2)/taille),barsize+bordersize+height*((getHeight()-barsize-bordersize*2)/taille),(getWidth()-bordersize*2)/taille,((getHeight()-bordersize*2 - barsize)/taille));
             }
         }
-        System.out.println((getWidth()-bordersize*2)/taille +" "+((getHeight()-bordersize*2 - barsize)/taille));
     }
 
     private int[] getLocation(int x ,int y){

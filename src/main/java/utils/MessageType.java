@@ -2,6 +2,7 @@ package utils;
 
 public class MessageType {
     public static String update = "UPDATE";
+    public static String info_chunk = "INFO_CHUNK";
     public static String hello_chunk = "HELLO_CHUNK";
     public static String move = "MOVE";
     public static String leave = "LEAVE";

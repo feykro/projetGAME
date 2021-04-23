@@ -1,7 +1,6 @@
 package utils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Chunk {
     private int taille;
@@ -101,9 +100,11 @@ public class Chunk {
         c.setObstacle();
     }
 
-    public Case getCase(int id){
+    public int[] getCoordoneeCase(int id){
         for(int i =0 ; i < taille*taille;i++){
-
+            if(tab[i].getEtat()==CaseState.occupeeJoueur && tab[i].getPlayerID()== id){
+                return new int[]{i/taille,i%taille};
+            }
         }
         return null;
     }

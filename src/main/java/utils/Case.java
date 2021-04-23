@@ -2,8 +2,6 @@ package utils;
 
 import static utils.CaseState.*;
 
-;
-
 public class Case {
 
     private CaseState etat;
@@ -26,14 +24,6 @@ public class Case {
         return etat != libre;
     }
 
-    public String getPlayerPseudo(){
-        assert(etat == occupeeJoueur);
-        return playerPseudo;
-    }
-    public int getPlayerID(){
-        assert(etat == occupeeJoueur);
-        return playerID;
-    }
 
     public boolean occupe(int id,String pseudo) {
         if(etat == occupeeJoueur || etat == occupeeObstacle || (etat == reservee && id != playerID)){
@@ -74,5 +64,14 @@ public class Case {
 
     public CaseState getEtat() {
         return etat;
+    }
+
+    public String getPlayerPseudo(){
+        assert(etat == occupeeJoueur);
+        return playerPseudo;
+    }
+    public int getPlayerID(){
+        assert(etat == occupeeJoueur);
+        return playerID;
     }
 }
