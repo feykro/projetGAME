@@ -23,15 +23,15 @@ public class GraphiqueChunk extends JFrame{
     private Player player;
     private Chunk plateau;
 
-    private Image imgDOWN = Toolkit.getDefaultToolkit().getImage("resources/personnage_DOWN.png");
-    private Image imgTOP = Toolkit.getDefaultToolkit().getImage("resources/personnage_TOP.png");
-    private Image imgLEFT = Toolkit.getDefaultToolkit().getImage("resources/personnage_LEFT.png");
-    private Image imgRIGHT = Toolkit.getDefaultToolkit().getImage("resources/personnage_RIGHT.png");
-    private Image imgStone = Toolkit.getDefaultToolkit().getImage("resources/cayou.png");
-    private Image imgCross = Toolkit.getDefaultToolkit().getImage("resources/lacroix.png");
-    private Image imgGrass = Toolkit.getDefaultToolkit().getImage("resources/grass1.png");
-    private Image imgGrassStone = Toolkit.getDefaultToolkit().getImage("resources/grassCayou.png");
-    private Image imgGrassSpawn = Toolkit.getDefaultToolkit().getImage("resources/grassSpawning.png");
+    private Image imgDOWN = Toolkit.getDefaultToolkit().getImage("resources/images/personnage_DOWN.png");
+    private Image imgTOP = Toolkit.getDefaultToolkit().getImage("resources/images/personnage_TOP.png");
+    private Image imgLEFT = Toolkit.getDefaultToolkit().getImage("resources/images/personnage_LEFT.png");
+    private Image imgRIGHT = Toolkit.getDefaultToolkit().getImage("resources/images/personnage_RIGHT.png");
+    private Image imgStone = Toolkit.getDefaultToolkit().getImage("resources/images/cayou.png");
+    private Image imgCross = Toolkit.getDefaultToolkit().getImage("resources/images/lacroix.png");
+    private Image imgGrass = Toolkit.getDefaultToolkit().getImage("resources/images/grass1.png");
+    private Image imgGrassStone = Toolkit.getDefaultToolkit().getImage("resources/images/grassCayou.png");
+    private Image imgGrassSpawn = Toolkit.getDefaultToolkit().getImage("resources/images/grassSpawning.png");
 
 
 
