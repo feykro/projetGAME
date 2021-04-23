@@ -218,7 +218,9 @@ public class ChunkManager {
             }
             pseudoIDmap.remove(playerID);
             sendLeave(playerID);
-            chunk.freeUserCase(Integer.parseInt(playerID));
+            if(!chunk.freeUserCase(Integer.parseInt(playerID))){
+                System.out.println("fail to purge "+playerID);
+            }
             return;
         }
         //return an error
@@ -274,7 +276,7 @@ public class ChunkManager {
     }
 
     private void sendLeave(String playerID){
-        String msg = MessageType.leave + " " + playerID;
+        String msg = leaving_player + " " + playerID;
         try {
             chunkPlayers.basicPublish(ExchangeChunkPlayerName, "Chunk"+id+"Players", null, msg.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {

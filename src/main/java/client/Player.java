@@ -304,9 +304,9 @@ public class Player {
             plateau.occupeCase(Integer.parseInt(parser[3]),Integer.parseInt(parser[4]),Integer.parseInt(parser[1]),parser[2]);
         } else if (type.equals(leaving_player)) {
             assert (parser.length == 2);
-            int coordonate[] = plateau.getCoordoneeCase(Integer.parseInt(parser[1]));
-            assert(coordonate != null);
-            plateau.freeCase(coordonate[0], coordonate[1]);
+            if(!plateau.freeUserCase(Integer.parseInt(parser[1]))){
+                System.out.println("fail to purge "+parser[1]);
+            }
         } else if (type.equals(message_from)) {
             assert (parser.length == 3);
             System.out.println(parser[1] + " : " + parser[2]);

@@ -53,7 +53,7 @@ public class Case {
     }
 
     public boolean free() {
-        if(etat == occupeeJoueur){
+        if(etat != occupeeJoueur){
             return false;
         }
         playerID=-1;
@@ -71,6 +71,7 @@ public class Case {
         return playerPseudo;
     }
     public int getPlayerID(){
+        System.out.println("je passe "+playerID);
         assert(etat == occupeeJoueur);
         return playerID;
     }

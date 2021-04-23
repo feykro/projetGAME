@@ -135,7 +135,7 @@ public class Chunk {
         for(int y=0; y<taille; y++){
             for(int x=0; x<taille; x++){
                 Case c = getCase(x, y);
-                if(c.getPlayerID() == id){
+                if(c.getEtat()==CaseState.occupeeJoueur && c.getPlayerID() == id){
                     return c;
                 }
             }
@@ -168,9 +168,15 @@ public class Chunk {
         return false;
     }
 
-    public void freeUserCase(int id){
+
+    public boolean freeUserCase(int id){
+        showChunk();
         Case c = findIdCase(id);
+        if(c == null){
+            return false;
+        }
         c.free();
+        return true;
     }
 
 //=========- populate a case -============
@@ -206,7 +212,7 @@ public class Chunk {
             System.out.println("-");
             for(int j=0; j< taille ; j++) {
                 System.out.print("|");
-                if(getCase(i, j).isOccupied()){
+                if(getCase(j, i).isOccupied()){
                     System.out.print("웃");
                 }
                 else{
