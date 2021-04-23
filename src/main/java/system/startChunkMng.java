@@ -10,7 +10,7 @@ public class startChunkMng {
         try {
             Chunk k = new Chunk();
             k.loadRdmSeed();
-            new ChunkManager(k, 0);
+            new ChunkManager(k, Integer.parseInt(args[0]));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (TimeoutException e) {

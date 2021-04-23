@@ -201,6 +201,7 @@ public class Player {
      * @param direction the direction of the movement
      */
     public void requestMove(Direction direction) {
+        System.out.println("Je demande a bouger vers "+direction);
         String message = move + " " + String.valueOf(getID()) + " " + direction;
         requestToChunk(message);
     }
@@ -296,11 +297,8 @@ public class Player {
             }
         } else if (type.equals(update)) {
             assert (parser.length == 5);
-            int coordonate[] = plateau.getCoordoneeCase(Integer.parseInt(parser[1]));
+            plateau.freeUserCase(Integer.parseInt(parser[1]));
             //si il etait deja sur le plateau
-            if(coordonate != null) {
-                plateau.freeCase(coordonate[0], coordonate[1]);
-            }
             plateau.occupeCase(Integer.parseInt(parser[3]),Integer.parseInt(parser[4]),Integer.parseInt(parser[1]),parser[2]);
         } else if (type.equals(leaving_player)) {
             assert (parser.length == 2);

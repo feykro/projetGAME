@@ -29,45 +29,49 @@ public class Chunk {
      * if the player leaves the area or not. This should be handled by either
      * changing return type to int or include a chunk id in this Class
      */
-    public boolean isValidMovement(int playerID, String Direction){
+    public boolean isValidMovement(int playerID, String direction){
+        int[] coor=getNewCoor(playerID, direction);
+        Case c = getCase(coor[0], coor[1]);
+        return !c.isOccupied();
+    }
+
+    public int[] getNewCoor(int playerID, String direction){
         int[] coor = findIDCaseCoor(playerID);
         int x = coor[0];
         int y = coor[1];
-        if(Direction.equals("NORTH")){
+        if(direction.equals("NORTH")){
             y -=1;
-        }else if(Direction.equals("SOUTH")){
+        }else if(direction.equals("SOUTH")){
             y += 1;
-        }else if(Direction.equals("WEST")){
+        }else if(direction.equals("WEST")){
             x -= 1;
-        }else if(Direction.equals("EAST")){
+        }else if(direction.equals("EAST")){
             x += 1;
         }else{
             System.out.println("Direction error: not NORTH/SOUTH/EAST/WEST\n");
-            return false;
+            return null;
         }
-        //TODO: implémenter un id pour voir si le mouvement est valide
-        //if(x == 6 && (id == 1) || (id == 2)) ...
-        Case c = getCase(x, y);
-        return !c.isOccupied();
+        return new int[]{x,y};
+
     }
 
     /**
      * Checks if there's a player in an adjacent tile in Direction of the player
      * return the coordinate of that adjacent player, or -1 -1 if there isn't one
      */
-    public int[] isValidTalk(int playerID, String Direction){
+    public int[] isValidTalk(int playerID, String direction){
         int[] coor = findIDCaseCoor(playerID);
         int[] res = {-1, -1};
         int x = coor[0];
         int y = coor[1];
-        if(Direction.equals("NORTH")){
-            y -=1;
-        }else if(Direction.equals("SOUTH")){
-            y += 1;
-        }else if(Direction.equals("WEST")){
-            x -= 1;
-        }else if(Direction.equals("EAST")){
+        if(direction.equals("NORTH")){
+            x -=1;
+        }else if(direction.equals("SOUTH")){
             x += 1;
+        }else if(direction.equals("WEST")){
+            y -= 1;
+        }else if(direction.equals("EAST")){
+            y += 1;
         }else{
             System.out.println("Direction error: not NORTH/SOUTH/EAST/WEST\n");
             return res;
@@ -82,6 +86,28 @@ public class Chunk {
             res[1] = y;
         }
         return res;
+    }
+
+    public int[] moveTo(int id,String direction){
+        int[] coor = findIDCaseCoor(id);
+        int x = coor[0];
+        int y = coor[1];
+        String pseudo = getCase(x,y).getPlayerPseudo();
+        freeUserCase(id);
+        if(direction.equals("NORTH")){
+            y -=1;
+        }else if(direction.equals("SOUTH")){
+            y += 1;
+        }else if(direction.equals("WEST")){
+            x -= 1;
+        }else if(direction.equals("EAST")){
+            x += 1;
+        }else{
+            System.out.println("Direction error: not NORTH/SOUTH/EAST/WEST\n");
+            return coor;
+        }
+        occupeCase(x,y,id,pseudo);
+        return new int[]{x,y};
     }
 
     public String loadRdmSeed(){
@@ -170,7 +196,6 @@ public class Chunk {
 
 
     public boolean freeUserCase(int id){
-        showChunk();
         Case c = findIdCase(id);
         if(c == null){
             return false;
@@ -251,7 +276,7 @@ public class Chunk {
 
 
     public Case getCase(int x, int y){
-        return tab[x*taille + y];
+        return tab[y*taille + x];
     }
 
     /* ======================================

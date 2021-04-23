@@ -71,7 +71,6 @@ public class Case {
         return playerPseudo;
     }
     public int getPlayerID(){
-        System.out.println("je passe "+playerID);
         assert(etat == occupeeJoueur);
         return playerID;
     }

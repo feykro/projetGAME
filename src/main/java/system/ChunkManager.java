@@ -131,25 +131,45 @@ public class ChunkManager {
                 return;
             }else{
                 System.out.println("On renvoit au joueur la coordonnée "+coor[0]+" : "+coor[1]);
-                String msg = hello_player+" "+Integer.toString(this.id)+" "+Integer.toString(coor[0])+" "+Integer.toString(coor[1]);
-                try {
-                    chunkPlayers.basicPublish(ExchangeChunkPlayerName, Integer.toString(playerID), null, msg.getBytes(StandardCharsets.UTF_8));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                sendHelloPlayer(playerID,coor);
                 return;
             }
         }
 
         if(parsedMsg[0].compareTo(player_Enter) ==0){
             int playerID = Integer.parseInt(parsedMsg[1]);
-            int x = Integer.parseInt(parsedMsg[2]);
-            int y = Integer.parseInt(parsedMsg[3]);
+            int chunkID = Integer.parseInt(parsedMsg[2]);
+            int coor[] = {Integer.parseInt(parsedMsg[3]),Integer.parseInt(parsedMsg[4])};
 
             System.out.println("Player "+playerID+" is trying to enter\n");
             //gérer l'arrivée d'un nouveau joueur
-            boolean canEnter = playerEnterTester(playerID, x, y);
+            boolean canEnter = playerEnterTester(playerID, coor[0], coor[1]);
             //todo: renvoyer ça au chunk dont le joueur est originaire
+            if(canEnter){
+                sendHelloPlayer(playerID,coor);
+                sendCanEnter(chunkID,playerID,"1");
+            }
+            else{
+                sendCanEnter(chunkID,playerID,"0");
+            }
+            return;
+        }
+
+        if(parsedMsg[0].equals(can_enter)) {
+            String playerID = parsedMsg[1];
+            if(!pseudoIDmap.containsKey(playerID)){
+                System.out.println("Player not present : can't withdraw him.");
+                return;
+            }
+            if(parsedMsg[2].equals("0")){
+                System.out.println("Fail to transfert "+playerID);
+                return;
+            }
+            pseudoIDmap.remove(playerID);
+            sendLeave(playerID);
+            if(!chunk.freeUserCase(Integer.parseInt(playerID))){
+                System.out.println("fail to purge "+playerID);
+            }
             return;
         }
 
@@ -184,23 +204,33 @@ public class ChunkManager {
                 //chunk
                 sendUpdate(playerID, playerPseudo, x, y);
             }
-
             return;
         }
 
-        if(parsedMsg[0].compareTo(move) == 0){
+        if(parsedMsg[0].equals(move)){
             int playerID = Integer.parseInt(parsedMsg[1]);
             String direction = parsedMsg[2];
             //vérifier si la case résultante est libre
-            boolean isValid = chunk.isValidMovement(playerID, direction);
             //todo: vérifier si on sort du chunk, si oui contacter le chunk approprié
+            int[] coor = chunk.getNewCoor(playerID,direction);
+            if(coor[0] >= 5 || coor[0] < 0 || coor[1]>=5 || coor[1]<0){
+                sendTransfertPlayer(playerID,coor);
+            }
+
             //todo: occuper la case résultante et libérer l'ancienne
+            if(!chunk.isValidMovement(playerID,direction)){
+                System.out.println(playerID +" cant move toward "+direction);
+                return;
+            }
+            int  newCoor[] =chunk.moveTo(playerID,direction);
+            sendUpdate(parsedMsg[1],pseudoIDmap.get(parsedMsg[1]),newCoor[0],newCoor[1]);
+            chunk.showChunk();
             //todo: update player position for everyone
 
             return;
         }
 
-        if(parsedMsg[0].compareTo(say) == 0){
+        if(parsedMsg[0].equals(say)){
             int playerID = Integer.parseInt(parsedMsg[1]);
             String direction = parsedMsg[2];
             String message = parsedMsg[3];
@@ -210,7 +240,7 @@ public class ChunkManager {
             return;
         }
 
-        if(parsedMsg[0].compareTo(leave) == 0){
+        if(parsedMsg[0].equals(leave)){
             String playerID = parsedMsg[1];
             if(!pseudoIDmap.containsKey(playerID)){
                 System.out.println("Player not present : can't withdraw him.");
@@ -218,13 +248,14 @@ public class ChunkManager {
             }
             pseudoIDmap.remove(playerID);
             sendLeave(playerID);
+            sendFreeID(playerID);
             if(!chunk.freeUserCase(Integer.parseInt(playerID))){
                 System.out.println("fail to purge "+playerID);
             }
             return;
         }
         //return an error
-        System.out.println("Error : unexpected player action received.\n");
+        System.out.println("Error : unexpected player action received :"+parsedMsg[0]);
     }
 
     /**
@@ -243,7 +274,6 @@ public class ChunkManager {
     private boolean playerEnterTester(int playerID, int x, int y){
         //On occupe la case avec le joueur
         boolean test = !chunk.getCase(x, y).isOccupied();
-        //todo : notify area that new player is arriving
         if(test){
             //on réserve l'arrivée
             chunk.reserveCase(x, y,playerID);
@@ -283,7 +313,10 @@ public class ChunkManager {
             e.printStackTrace();
             return;
         }
+        System.out.println("Sent player leaving msg: \n"+msg);
+    }
 
+    private void sendFreeID(String playerID){
         String msgPortal = MessageType.free_ID + " " + playerID;
         try {
             sys.basicPublish(ExchangeSysName, "Portail", null, msgPortal.getBytes(StandardCharsets.UTF_8));
@@ -291,7 +324,58 @@ public class ChunkManager {
             e.printStackTrace();
             return;
         }
+    }
 
-        System.out.println("Sent player leaving msg: \n"+msg);
+
+    private void sendHelloPlayer(int playerID,int[] coor){
+        String msg = hello_player+" "+Integer.toString(this.id)+" "+Integer.toString(coor[0])+" "+Integer.toString(coor[1]);
+        try {
+            chunkPlayers.basicPublish(ExchangeChunkPlayerName, Integer.toString(playerID), null, msg.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private void sendTransfertPlayer(int playerID,int[] coor){
+        int id_transfert_chunk = determineTransfertChunkID(coor);
+        coor[0] = (coor[0]+chunk.getTaille()) % chunk.getTaille();
+        coor[1] = (coor[1]+chunk.getTaille()) % chunk.getTaille();
+        String msg = player_Enter + " " + id + " " + playerID + " " + coor[0] + " " + coor[1];
+        try {
+            sys.basicPublish(ExchangeSysName, "Chunk"+id_transfert_chunk, null, msg.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+    }
+
+    private void sendCanEnter(int chunkID,int playerID,String result){
+        String msg = can_enter + " " + playerID + " " + result;
+        try {
+            sys.basicPublish(ExchangeSysName, "Chunk"+chunkID, null, msg.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+    }
+
+    private int determineTransfertChunkID(int[] coor){
+        if(coor[0]>=5 || coor[0]<0){
+            if(this.id%2 == 0){
+                return this.id +1;
+            }
+            else{
+                return this.id -1;
+            }
+        }
+        if(coor[1]>=5 || coor[1]<0){
+            if(this.id < 2){
+                return this.id +2;
+            }
+            else{
+                return this.id -2;
+            }
+        }
+        assert(false);
+        return -1;
     }
 }
