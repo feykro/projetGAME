@@ -45,6 +45,7 @@ public class GraphiqueChunk extends JFrame{
         setVisible(true);
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        initListener();
     }
 
     public void drawChunk(Chunk chunk) {
@@ -107,19 +108,21 @@ public class GraphiqueChunk extends JFrame{
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
-                switch(e.getKeyCode()){
-                    case KeyEvent.VK_DOWN:
-                        player.requestMove(Direction.SOUTH);
-                        break;
-                    case KeyEvent.VK_UP:
-                        player.requestMove(Direction.NORTH);
-                        break;
-                    case KeyEvent.VK_RIGHT:
-                        player.requestMove(Direction.EAST);
-                        break;
-                    case KeyEvent.VK_LEFT:
-                        player.requestMove(Direction.WEST);
-                        break;
+                if(player != null) {
+                    switch (e.getKeyCode()) {
+                        case KeyEvent.VK_DOWN:
+                            player.requestMove(Direction.SOUTH);
+                            break;
+                        case KeyEvent.VK_UP:
+                            player.requestMove(Direction.NORTH);
+                            break;
+                        case KeyEvent.VK_RIGHT:
+                            player.requestMove(Direction.EAST);
+                            break;
+                        case KeyEvent.VK_LEFT:
+                            player.requestMove(Direction.WEST);
+                            break;
+                    }
                 }
             }
         });
