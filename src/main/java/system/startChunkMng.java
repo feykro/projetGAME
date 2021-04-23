@@ -8,7 +8,9 @@ import java.util.concurrent.TimeoutException;
 public class startChunkMng {
     public static void main(String[] args) {
         try {
-            new ChunkManager(new Chunk(), 0);
+            Chunk k = new Chunk();
+            k.loadRdmSeed();
+            new ChunkManager(k, 0);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (TimeoutException e) {

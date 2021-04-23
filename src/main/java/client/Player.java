@@ -129,7 +129,9 @@ public class Player {
      */
     public void initChunkQueueReciever(int chunkNumber) {
         //unbind old chunk queue
-        unbindQueue(finalQueuequeueChunkName, ExchangeChunkPlayerName, "Chunk" + currentChunkNumber);
+        if(finalQueuequeueChunkName != null){
+            unbindQueue(finalQueuequeueChunkName, ExchangeChunkPlayerName, "Chunk" + currentChunkNumber);
+        }
 
         System.out.println("mon chunk est " + chunkNumber);
         currentChunkNumber = chunkNumber;
@@ -246,7 +248,6 @@ public class Player {
             id_response.queueUnbind(queueName, chanel, key);
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
             return false;
         }
     }
@@ -273,13 +274,14 @@ public class Player {
      * @param message
      */
     private void manageMessage(String message) {
+        System.out.println("Received message : \n"+message);
         String parser[] = message.split(" ");
         assert (parser.length > 0);
         String type = parser[0];
         if (type.equals(info_chunk)) {
             assert (parser.length > 5);
             int nb_update = Integer.parseInt(parser[1]);
-            for (int i = 2; i < nb_update; i += 5) {
+            for (int i = 2; (i-2)/4 < nb_update; i += 4) {
                 if(parser[i].equals("-1")){
                     plateau.addObstacle(Integer.parseInt(parser[i + 2]), Integer.parseInt(parser[i + 3]));
                 }

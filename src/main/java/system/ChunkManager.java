@@ -5,6 +5,8 @@ import utils.Chunk;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.concurrent.TimeoutException;
 
 import static utils.ExchangeName.*;
@@ -17,6 +19,7 @@ public class ChunkManager {
     private int id;
     private Chunk chunk;
     private int searchCounter = 0;
+    private HashMap<String, String> pseudoIDmap;
 
     private Channel chunkPlayers;
     private Channel sys;
@@ -28,6 +31,8 @@ public class ChunkManager {
     public ChunkManager(Chunk chk, int ayedi) throws IOException, TimeoutException {
         this.id = ayedi;
         this.chunk = chk;
+        //HashMap - clef: ID | value: pseudo
+        this.pseudoIDmap = new HashMap<>();
         playerQueueName = "chunk"+id+"PlayersQueue";
         chunkTopic = "Chunk"+id;
 
@@ -124,7 +129,13 @@ public class ChunkManager {
                 //Faut aller chercher une place ailleurs
                 return;
             }else{
-                //TODO : renvoyer au portail la position
+                System.out.println("On renvoit au joueur la coordonnée "+coor[0]+" : "+coor[1]);
+                String msg = hello_player+" "+Integer.toString(this.id)+" "+Integer.toString(coor[0])+" "+Integer.toString(coor[1]);
+                try {
+                    chunkPlayers.basicPublish(ExchangeChunkPlayerName, Integer.toString(playerID), null, msg.getBytes(StandardCharsets.UTF_8));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 return;
             }
         }
@@ -155,13 +166,21 @@ public class ChunkManager {
      * Function called to react to a player query
      */
     private void playerAction(String [] parsedMsg){
+
         if(parsedMsg[0].equals(hello_chunk)){
-            int playerID = Integer.parseInt(parsedMsg[1]);
+            String playerID = parsedMsg[1];
             String playerPseudo = parsedMsg[2];
             int x = Integer.parseInt(parsedMsg[3]);
             int y = Integer.parseInt(parsedMsg[4]);
             //spawn player position in the chunk I guess
-            chunk.occupeCase(x, y,playerID, playerPseudo);
+            chunk.occupeCase(x, y, Integer.parseInt(playerID), playerPseudo);
+            this.pseudoIDmap.put(playerID, playerPseudo);
+            if(sendInfoChunk(playerID, playerPseudo, x, y)){
+                //On a envoyé les informations au joueur, il faut maintenant tenir informé les joueurs de notre
+                //chunk
+                System.out.println("faut envoyer le message aux autres joueurs");
+            }
+
             return;
         }
 
@@ -217,5 +236,17 @@ public class ChunkManager {
             chunk.reserveCase(x, y,playerID);
         }
         return test;
+    }
+
+    private boolean sendInfoChunk(String playerID, String playerPseudo, int playerX, int playerY){
+        String msg = chunk.getInfochunk();
+        System.out.println("Send msg : \n"+msg);
+        try {
+            chunkPlayers.basicPublish(ExchangeChunkPlayerName, playerID, null, msg.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 }

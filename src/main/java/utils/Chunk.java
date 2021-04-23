@@ -259,4 +259,26 @@ public class Chunk {
     public Case[] getTab() {
         return tab;
     }
+
+    public String getInfochunk(){
+        String info = "";
+        int cmt = 0;
+        for(int x=0; x<this.taille; x++){
+            for(int y=0; y<this.taille; y++){
+                Case c = getCase(x, y);
+                if(c.getEtat() == CaseState.occupeeJoueur){
+                    String id = Integer.toString(c.getPlayerID()) + " ";
+                    String pseudo = c.getPlayerPseudo() + " ";
+                    info = info + " " + id + pseudo + Integer.toString(x) + " " + Integer.toString(y);
+                    cmt++;
+                }else if(c.getEtat() == CaseState.occupeeObstacle){
+                    String id = "-1 ";
+                    String pseudo = "obstacle ";
+                    info = info + " " + id + pseudo + Integer.toString(x) + " " + Integer.toString(y);
+                    cmt++;
+                }
+            }
+        }
+        return MessageType.info_chunk + " " + Integer.toString(cmt) +info;
+    }
 }
