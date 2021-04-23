@@ -1,17 +1,14 @@
 package utils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Chunk {
     private int taille;
     private Case[] tab;
     private ArrayList<String> pseudoList;
-
-    public Chunk(int taille){
-        this.taille = taille;
-        tab = new Case[this.taille*this.taille];
-        tabInit();
-    }
 
     public Chunk(){
         this.taille = 5;
@@ -19,6 +16,35 @@ public class Chunk {
         tabInit();
     }
 
+    public String loadRdmSeed(){
+        int seedNumber = (int)(Math.random() * ((11) + 1));
+        String mapName = "seed"+seedNumber+".seed";
+        File fileMap = new File("resources/mapSeed/"+mapName);
+        try {
+            Scanner reader = new Scanner(fileMap);
+            for (int i =0; i < taille;i++) {
+                String line = reader.nextLine();
+                for(int j =0; j < taille ; j++){
+                    assert(line.length()>= taille);
+                    switch(line.charAt(j)){
+                        case '1':
+                            addObstacle(j,i);
+                            break;
+                        case '0':
+                            break;
+                        default:
+                            throw new IllegalStateException("Unexpected value: " + line.charAt(j));
+                    }
+                }
+            }
+            reader.close();
+        } catch (
+        FileNotFoundException e) {
+            System.out.println("Can not open Map seed");
+            e.printStackTrace();
+        }
+        return mapName;
+    }
     public void tabInit(){
         for(int j=0; j<taille; j++){
             for(int i=0; i<taille; i++){
