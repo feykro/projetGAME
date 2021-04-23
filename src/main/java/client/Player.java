@@ -28,7 +28,7 @@ public class Player {
     private int currentChunkNumber;
 
     private String finalQueueIDrespondName = null;
-    private String finalQueueSysName = null;
+    private String finalPersonalQueueName = null;
     private String finalQueuequeueChunkName = null;
 
     private String pseudo;
@@ -80,7 +80,7 @@ public class Player {
                     String id = new String(delivery.getBody(), "UTF-8");
                     if (checkID(id)) {
                         unbindQueue(finalQueueIDrespondName, ExchangeIDRespondName, "");
-                        initPersonalQueueReciever();
+                        initPersonalQueueReceiver();
                         spawnRequest();
                     }
                 };
@@ -97,7 +97,7 @@ public class Player {
     /**
      * Initialise personal queue to sub on his id to take specific message from chunk/portal
      */
-    public void initPersonalQueueReciever() {
+    public void initPersonalQueueReceiver() {
         String queueChunkName = null;
         try {
             String key = String.valueOf(getID());
@@ -107,7 +107,7 @@ public class Player {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        finalQueueSysName = queueChunkName;
+        finalPersonalQueueName = queueChunkName;
         new Thread() {
             public void run() {
                 DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -115,7 +115,7 @@ public class Player {
                     manageMessage(message);
                 };
                 try {
-                    chunk.basicConsume(finalQueueSysName, true, deliverCallback, consumerTag -> {
+                    chunk.basicConsume(finalPersonalQueueName, true, deliverCallback, consumerTag -> {
                     });
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -127,19 +127,21 @@ public class Player {
     /**
      * Initialise chunk queue  to have message of the chunk where it is currently
      */
-    public void initChunkQueueReciever(int chunkNumber) {
+    public void initChunkQueueReceiver(int chunkNumber) {
         //unbind old chunk queue
         if(finalQueuequeueChunkName != null){
-            unbindQueue(finalQueuequeueChunkName, ExchangeChunkPlayerName, "Chunk" + currentChunkNumber);
+            unbindQueue(finalQueuequeueChunkName, ExchangeChunkPlayerName, "Chunk" + currentChunkNumber+"Players");
         }
 
         System.out.println("mon chunk est " + chunkNumber);
         currentChunkNumber = chunkNumber;
         String queueChunkName = null;
         try {
-            String key = "Chunk" + chunkNumber;
+            String key = "Chunk" + chunkNumber + "Players";
             queueChunkName = chunk.queueDeclare().getQueue();
+            //chunk.queueDeclare(queueChunkName, true, false, false, null);
             chunk.queueBind(queueChunkName, ExchangeChunkPlayerName, key);
+            System.out.println("Je suis abonné au chunk "+chunkNumber+" avec la clef "+key);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -151,7 +153,7 @@ public class Player {
                     manageMessage(message);
                 };
                 try {
-                    chunk.basicConsume(finalQueueSysName, true, deliverCallback, consumerTag -> {
+                    chunk.basicConsume(finalQueuequeueChunkName, true, deliverCallback, consumerTag -> {
                     });
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -218,6 +220,9 @@ public class Player {
      * Request to chunk when Player would leave the game
      */
     public void requestLeaveGame() {
+        unbindQueue(finalPersonalQueueName, ExchangeChunkPlayerName, Integer.toString(getID()));
+        unbindQueue(finalQueuequeueChunkName, ExchangeChunkPlayerName, "Chunk"+currentChunkNumber+"Players");
+
         String message = leave + " " + String.valueOf(getID());
         requestToChunk(message);
     }
@@ -310,7 +315,7 @@ public class Player {
             assert (parser.length == 4);
             plateau.tabInit();
             plateau.reserveCase(Integer.parseInt(parser[2]),Integer.parseInt(parser[3]),getID());
-            initChunkQueueReciever(Integer.parseInt(parser[1]));
+            initChunkQueueReceiver(Integer.parseInt(parser[1]));
             requestHelloChunk(Integer.parseInt(parser[2]), Integer.parseInt(parser[3]));
         } else {
             System.out.println("Error : In Player Message Type unknown");

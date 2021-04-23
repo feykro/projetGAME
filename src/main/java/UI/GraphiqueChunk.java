@@ -9,6 +9,8 @@ import utils.Direction;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import javax.swing.JFrame;
 
@@ -44,8 +46,18 @@ public class GraphiqueChunk extends JFrame{
         setLocationRelativeTo(null);
         setVisible(true);
         setResizable(false);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        addCloseListener();
         initListener();
+    }
+
+    private int addCloseListener(){
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                player.requestLeaveGame();
+                System.exit(0);
+            }
+        });
+        return 0;
     }
 
     public void drawChunk(Chunk chunk) {

@@ -83,7 +83,8 @@ public class Portail {
             public void run() {
                 DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                     String id = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                    int managerRDM = Integer.parseInt(id)%4;
+                    //int managerRDM = Integer.parseInt(id)%4;
+                    int managerRDM = 0;
                     String message = find_spawn+" "+id+" "+managerRDM;
                     System.out.println("Sending message : "+message);
                     sys.basicPublish(ExchangeSysName, "Chunk"+managerRDM, null, message.getBytes("UTF-8"));
@@ -139,6 +140,8 @@ public class Portail {
         return "-1";
     }
     private void addFreeID(String id){
+        System.out.println("Portal: got id : "+id);
         listID.add(id);
+
     }
 }

@@ -2,6 +2,7 @@ package system;
 
 import com.rabbitmq.client.*;
 import utils.Chunk;
+import utils.MessageType;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -152,12 +153,15 @@ public class ChunkManager {
             return;
         }
 
+        /*
         if(parsedMsg[0].compareTo(free_ID) == 0){
             int playerID = Integer.parseInt(parsedMsg[2]);
             //todo: libérer le joueur auprès du portail
             chunk.freeUserCase(playerID);
             return;
         }
+        */
+
         //return an error
         System.out.println("Error : unexpected system request received.\n");
     }
@@ -175,10 +179,10 @@ public class ChunkManager {
             //spawn player position in the chunk I guess
             chunk.occupeCase(x, y, Integer.parseInt(playerID), playerPseudo);
             this.pseudoIDmap.put(playerID, playerPseudo);
-            if(sendInfoChunk(playerID, playerPseudo, x, y)){
+            if(sendInfoChunk(playerID)){
                 //On a envoyé les informations au joueur, il faut maintenant tenir informé les joueurs de notre
                 //chunk
-                System.out.println("faut envoyer le message aux autres joueurs");
+                sendUpdate(playerID, playerPseudo, x, y);
             }
 
             return;
@@ -205,9 +209,16 @@ public class ChunkManager {
             //todo: send message to player
             return;
         }
+
         if(parsedMsg[0].compareTo(leave) == 0){
             String playerID = parsedMsg[1];
-            //je comprends pas a quoi sert free id dans sysAction
+            if(!pseudoIDmap.containsKey(playerID)){
+                System.out.println("Player not present : can't withdraw him.");
+                return;
+            }
+            pseudoIDmap.remove(playerID);
+            sendLeave(playerID);
+            chunk.freeUserCase(Integer.parseInt(playerID));
             return;
         }
         //return an error
@@ -238,8 +249,8 @@ public class ChunkManager {
         return test;
     }
 
-    private boolean sendInfoChunk(String playerID, String playerPseudo, int playerX, int playerY){
-        String msg = chunk.getInfochunk();
+    private boolean sendInfoChunk(String playerID){
+        String msg = chunk.getInfochunk(Integer.parseInt(playerID));
         System.out.println("Send msg : \n"+msg);
         try {
             chunkPlayers.basicPublish(ExchangeChunkPlayerName, playerID, null, msg.getBytes(StandardCharsets.UTF_8));
@@ -248,5 +259,37 @@ public class ChunkManager {
             return false;
         }
         return true;
+    }
+
+    private void sendUpdate(String playerID, String playerPseudo, int playerX, int playerY){
+        String msg = update + " " + playerID + " " + playerPseudo + " " + Integer.toString(playerX) + " " + Integer.toString(playerY);
+
+        try {
+            chunkPlayers.basicPublish(ExchangeChunkPlayerName, "Chunk"+id+"Players", null, msg.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        System.out.println("Sent update msg: \n"+msg);
+    }
+
+    private void sendLeave(String playerID){
+        String msg = MessageType.leave + " " + playerID;
+        try {
+            chunkPlayers.basicPublish(ExchangeChunkPlayerName, "Chunk"+id+"Players", null, msg.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        String msgPortal = MessageType.free_ID + " " + playerID;
+        try {
+            sys.basicPublish(ExchangeSysName, "Portail", null, msgPortal.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        System.out.println("Sent player leaving msg: \n"+msg);
     }
 }

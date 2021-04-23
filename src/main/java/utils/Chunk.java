@@ -260,13 +260,13 @@ public class Chunk {
         return tab;
     }
 
-    public String getInfochunk(){
+    public String getInfochunk(int playerID){
         String info = "";
         int cmt = 0;
         for(int x=0; x<this.taille; x++){
             for(int y=0; y<this.taille; y++){
                 Case c = getCase(x, y);
-                if(c.getEtat() == CaseState.occupeeJoueur){
+                if(c.getEtat() == CaseState.occupeeJoueur && c.getPlayerID() != playerID){
                     String id = Integer.toString(c.getPlayerID()) + " ";
                     String pseudo = c.getPlayerPseudo() + " ";
                     info = info + " " + id + pseudo + Integer.toString(x) + " " + Integer.toString(y);
