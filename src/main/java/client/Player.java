@@ -1,5 +1,6 @@
 package client;
 
+import UI.GraphiqueChunk;
 import com.rabbitmq.client.*;
 import utils.Chunk;
 import utils.Direction;
@@ -18,6 +19,7 @@ import static utils.MessageType.*;
 public class Player {
 
     private Chunk plateau;
+    private GraphiqueChunk ui;
 
     private Channel portailRequest;
     private Channel id_response;
@@ -41,6 +43,8 @@ public class Player {
         this.pseudo = pseudo;
 
         this.plateau = new Chunk();
+
+        this.ui = new GraphiqueChunk(plateau.getTaille(),this);
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
@@ -264,7 +268,7 @@ public class Player {
     }
 
     /**
-     * manage message from chunk
+     * Manage message from chunk and update Ui
      *
      * @param message
      */
@@ -272,30 +276,42 @@ public class Player {
         String parser[] = message.split(" ");
         assert (parser.length > 0);
         String type = parser[0];
-        if (type.equals(update)) {
-            assert (parser.length > 7);
+        if (type.equals(info_chunk)) {
+            assert (parser.length > 5);
             int nb_update = Integer.parseInt(parser[1]);
             for (int i = 2; i < nb_update; i += 5) {
-                plateau.freeCase(Integer.parseInt(parser[i + 2]), Integer.parseInt(parser[i + 3]));
-                plateau.occupeCase(Integer.parseInt(parser[i + 4]), Integer.parseInt(parser[i + 5]),Integer.parseInt(parser[i]), parser[i+1]);
+                if(parser[i].equals("-1")){
+                    plateau.addObstacle(Integer.parseInt(parser[i + 2]), Integer.parseInt(parser[i + 3]));
+                }
+                else{
+                    plateau.occupeCase(Integer.parseInt(parser[i + 2]), Integer.parseInt(parser[i + 3]),Integer.parseInt(parser[i]), parser[i+1]);
+                }
             }
-            //todo graphique part
+        } else if (type.equals(update)) {
+            assert (parser.length == 5);
+            int coordonate[] = plateau.getCoordoneeCase(Integer.parseInt(parser[1]));
+            assert(coordonate != null);
+            plateau.freeCase(coordonate[0], coordonate[1]);
+            plateau.occupeCase(Integer.parseInt(parser[3]),Integer.parseInt(parser[4]),Integer.parseInt(parser[1]),parser[2]);
         } else if (type.equals(leaving_player)) {
             assert (parser.length == 2);
-            plateau.freeCase(Integer.parseInt(parser[1]), Integer.parseInt(parser[2]));
-            //todo graphique part
+            int coordonate[] = plateau.getCoordoneeCase(Integer.parseInt(parser[1]));
+            assert(coordonate != null);
+            plateau.freeCase(coordonate[0], coordonate[1]);
         } else if (type.equals(message_from)) {
             assert (parser.length == 3);
             System.out.println(parser[1] + " : " + parser[2]);
             //todo graphique part
         } else if (type.equals(hello_player)) {
             assert (parser.length == 4);
+            plateau.tabInit();
+            plateau.reserveCase(Integer.parseInt(parser[2]),Integer.parseInt(parser[3]),getID());
             initChunkQueueReciever(Integer.parseInt(parser[1]));
             requestHelloChunk(Integer.parseInt(parser[2]), Integer.parseInt(parser[3]));
-            //todo graphique part
         } else {
             System.out.println("Error : In Player Message Type unknown");
         }
+        ui.drawChunk(plateau);
     }
 
 
