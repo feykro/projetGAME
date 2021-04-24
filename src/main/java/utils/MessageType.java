@@ -5,6 +5,7 @@ public class MessageType {
     public static String info_chunk = "INFO_CHUNK";
     public static String hello_chunk = "HELLO_CHUNK";
     public static String move = "MOVE";
+    public static String turn = "TURN";
     public static String leave = "LEAVE";
     public static String say = "SAY";
     public static String leaving_player = "LEAVING_PLAYER";

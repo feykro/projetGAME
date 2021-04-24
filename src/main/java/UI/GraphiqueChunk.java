@@ -31,9 +31,7 @@ public class GraphiqueChunk extends JFrame{
     private Image imgRIGHT = Toolkit.getDefaultToolkit().getImage("resources/images/personnage_RIGHT.png");
     private Image imgStone = Toolkit.getDefaultToolkit().getImage("resources/images/cayou.png");
     private Image imgCross = Toolkit.getDefaultToolkit().getImage("resources/images/lacroix.png");
-    private Image imgGrass = Toolkit.getDefaultToolkit().getImage("resources/images/grass1.png");
-    private Image imgGrassStone = Toolkit.getDefaultToolkit().getImage("resources/images/grassCayou.png");
-    private Image imgGrassSpawn = Toolkit.getDefaultToolkit().getImage("resources/images/grassSpawning.png");
+    private Image imgGrass;
 
 
 
@@ -67,33 +65,27 @@ public class GraphiqueChunk extends JFrame{
 
     public void paint(Graphics g){
         g.clearRect(0,0,900,900);
+        imgGrass = Toolkit.getDefaultToolkit().getImage("resources/images/grass"+player.getCurrentChunkNumber()+".png");
         if(plateau!=null) {
             for (int x = 0; x < taille; x++) {
                 for (int y = 0; y < taille; y++) {
+                    g.drawImage(imgGrass, bordersize + x * ((getWidth() - bordersize * 2) / taille), barsize + bordersize + y * ((getHeight() - barsize - bordersize * 2) / taille), this);
                     switch (plateau.getCase(x, y).getEtat()) {
                         case libre -> {
-                            g.drawImage(imgGrass, bordersize + x * ((getWidth() - bordersize * 2) / taille), barsize + bordersize + y * ((getHeight() - barsize - bordersize * 2) / taille), this);
                             break;
                         }
                         case reservee -> {
                             int locationIMG[] = getLocation(x, y);
-                            g.drawImage(imgGrassSpawn, bordersize + x * ((getWidth() - bordersize * 2) / taille), barsize + bordersize + y * ((getHeight() - barsize - bordersize * 2) / taille), this);
                             g.drawImage(imgCross, locationIMG[0] + 2, locationIMG[1] + 15, this);
                             break;
                         }
                         case occupeeJoueur -> {
-                            int locationIMG[] = getLocation(x, y);
-                            g.drawImage(imgGrass, bordersize + x * ((getWidth() - bordersize * 2) / taille), barsize + bordersize + y * ((getHeight() - barsize - bordersize * 2) / taille), this);
-                            g.drawImage(imgDOWN, locationIMG[0], locationIMG[1], this);
-                            String pseudo = plateau.getCase(x, y).getPlayerPseudo();
-                            g.clearRect(locationIMG[0] + 20, locationIMG[1] + 10, pseudo.length() * 12, 20);
-                            g.setFont(new Font("Serif", Font.PLAIN, 20));
-                            g.drawString(pseudo, locationIMG[0] + 20, locationIMG[1] + 25);
+                            drawPlayer(g,x,y);
                             break;
                         }
                         case occupeeObstacle -> {
                             int locationIMG[] = getLocation(x, y);
-                            g.drawImage(imgGrassStone, bordersize + x * ((getWidth() - bordersize * 2) / taille), barsize + bordersize + y * ((getHeight() - barsize - bordersize * 2) / taille), this);
+                            g.drawImage(imgStone, locationIMG[0] + 2, locationIMG[1] + 15, this);
                             break;
                         }
                     }
@@ -101,6 +93,32 @@ public class GraphiqueChunk extends JFrame{
             }
         }
         drawGrille(g);
+
+    }
+
+    private void drawPlayer(Graphics g,int x ,int y){
+        int locationIMG[] = getLocation(x, y);
+
+        switch (plateau.getCase(x, y).getPlayerDirection()) {
+            case SOUTH -> {
+                g.drawImage(imgDOWN, locationIMG[0], locationIMG[1], this);
+            }
+            case NORTH -> {
+                g.drawImage(imgTOP, locationIMG[0], locationIMG[1], this);
+            }
+            case WEST -> {
+                g.drawImage(imgLEFT, locationIMG[0], locationIMG[1], this);
+            }
+            case EAST -> {
+                g.drawImage(imgRIGHT, locationIMG[0], locationIMG[1], this);
+            }
+        }
+
+        String pseudo = plateau.getCase(x, y).getPlayerPseudo();
+        g.clearRect(locationIMG[0] + 20, locationIMG[1] + 10, pseudo.length() * 12, 20);
+        g.setFont(new Font("Serif", Font.PLAIN, 20));
+        g.drawString(pseudo, locationIMG[0] + 20, locationIMG[1] + 25);
+
     }
 
 

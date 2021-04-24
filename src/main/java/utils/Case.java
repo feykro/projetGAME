@@ -6,13 +6,12 @@ public class Case {
 
     private CaseState etat;
     private int playerID;
+    private Direction playerDirection;
     private String playerPseudo;
     //pour la partie graphique, lui associer une texture
 
     public Case(){
-        playerPseudo=null;
-        playerID=-1;
-        etat = libre;
+        resetOccupant();
     }
 
     /* ======================================
@@ -25,14 +24,21 @@ public class Case {
     }
 
 
-    public boolean occupe(int id,String pseudo) {
+    public boolean occupe(int id,String pseudo,Direction direction) {
         if(etat == occupeeJoueur || etat == occupeeObstacle || (etat == reservee && id != playerID)){
             return false;
         }
         playerID=id;
         playerPseudo=pseudo;
+        playerDirection=direction;
         etat = occupeeJoueur;
         return true;
+    }
+
+    private void resetOccupant(){
+        playerID=-1;
+        playerPseudo=null;
+        etat = libre;
     }
 
     public boolean reserve(int id) {
@@ -56,9 +62,7 @@ public class Case {
         if(etat != occupeeJoueur){
             return false;
         }
-        playerID=-1;
-        playerPseudo=null;
-        etat = libre;
+        resetOccupant();
         return true;
     }
 
@@ -73,5 +77,14 @@ public class Case {
     public int getPlayerID(){
         assert(etat == occupeeJoueur);
         return playerID;
+    }
+    public Direction getPlayerDirection(){
+        assert(etat == occupeeJoueur);
+        return playerDirection;
+    }
+
+    public void updatePlayerDirection(Direction direction){
+        assert(etat == occupeeJoueur);
+        playerDirection = direction;
     }
 }

@@ -5,6 +5,8 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import static utils.Direction.getDirection;
+
 public class Chunk {
     private int taille;
     private Case[] tab;
@@ -106,7 +108,7 @@ public class Chunk {
             System.out.println("Direction error: not NORTH/SOUTH/EAST/WEST\n");
             return coor;
         }
-        occupeCase(x,y,id,pseudo);
+        occupeCase(x,y,id,pseudo,getDirection(direction));
         return new int[]{x,y};
     }
 
@@ -206,9 +208,9 @@ public class Chunk {
 
 //=========- populate a case -============
 
-    public boolean occupeCase(int x, int y,int id, String pseudo){
+    public boolean occupeCase(int x, int y,int id, String pseudo,Direction direction){
         if(x<taille && y < taille){
-            getCase(x,y).occupe(id,pseudo);
+            getCase(x,y).occupe(id,pseudo,direction);
             return true;
         }
         return false;
@@ -217,6 +219,15 @@ public class Chunk {
     public void reserveCase(int x, int y,int id){
         Case c = getCase(x, y);
         c.reserve(id);
+    }
+
+    public boolean updateDirection(int id,Direction direction){
+        Case c = findIdCase(id);
+        if(c == null){
+            return false;
+        }
+        c.updatePlayerDirection(direction);
+        return true;
     }
 
     //===========- init -==================
@@ -300,12 +311,12 @@ public class Chunk {
                 if(c.getEtat() == CaseState.occupeeJoueur && c.getPlayerID() != playerID){
                     String id = Integer.toString(c.getPlayerID()) + " ";
                     String pseudo = c.getPlayerPseudo() + " ";
-                    info = info + " " + id + pseudo + Integer.toString(x) + " " + Integer.toString(y);
+                    info = info + " " + id + pseudo + Integer.toString(x) + " " + Integer.toString(y) + " " + c.getPlayerDirection();
                     cmt++;
                 }else if(c.getEtat() == CaseState.occupeeObstacle){
                     String id = "-1 ";
                     String pseudo = "obstacle ";
-                    info = info + " " + id + pseudo + Integer.toString(x) + " " + Integer.toString(y);
+                    info = info + " " + id + pseudo + Integer.toString(x) + " " + Integer.toString(y)+ " SOUTH";
                     cmt++;
                 }
             }

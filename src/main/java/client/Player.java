@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
+import static utils.Direction.SOUTH;
+import static utils.Direction.getDirection;
 import static utils.ExchangeName.*;
 import static utils.MessageType.*;
 
@@ -24,6 +26,8 @@ public class Player {
     private Channel portailRequest;
     private Channel id_response;
     private Channel chunk;
+
+    private Direction direction;
 
     private int currentChunkNumber;
 
@@ -41,6 +45,8 @@ public class Player {
     public Player(String pseudo) throws IOException, TimeoutException {
 
         this.pseudo = pseudo;
+
+        this.direction = SOUTH;
 
         this.plateau = new Chunk();
 
@@ -130,16 +136,15 @@ public class Player {
     public void initChunkQueueReceiver(int chunkNumber) {
         //unbind old chunk queue
         if(finalQueuequeueChunkName != null){
-            unbindQueue(finalQueuequeueChunkName, ExchangeChunkPlayerName, "Chunk" + currentChunkNumber+"Players");
+            unbindQueue(finalQueuequeueChunkName, ExchangeChunkPlayerName, "Chunk" + currentChunkNumber+".Players");
         }
 
         System.out.println("mon chunk est " + chunkNumber);
         currentChunkNumber = chunkNumber;
         String queueChunkName = null;
         try {
-            String key = "Chunk" + chunkNumber + "Players";
+            String key = "Chunk" + chunkNumber + ".Players";
             queueChunkName = chunk.queueDeclare().getQueue();
-            //chunk.queueDeclare(queueChunkName, true, false, false, null);
             chunk.queueBind(queueChunkName, ExchangeChunkPlayerName, key);
             System.out.println("Je suis abonné au chunk "+chunkNumber+" avec la clef "+key);
         } catch (IOException e) {
@@ -191,8 +196,21 @@ public class Player {
      * @param y coordonate to initial position in the chunk
      */
     public void requestHelloChunk(int x, int y) {
-        String message = hello_chunk + " " + String.valueOf(getID()) + " " + getPseudo() + " " + x + " " + y;
+        String message = hello_chunk + " " + String.valueOf(getID()) + " " + getPseudo() + " " + x + " " + y + " " + direction;
         requestToChunk(message);
+    }
+
+    /**
+     * Update to chunk and player when Player turn
+     *
+     * @param direction the direction of the movement
+     */
+    public void sendTurn(Direction direction) {
+        System.out.println("je previens que je me tourne vers " + direction);
+        String message = turn + " " + String.valueOf(getID()) + " " + direction;
+        plateau.updateDirection(getID(),direction);
+        requestToChunkAndPlayer(message);
+        ui.drawChunk(plateau);
     }
 
     /**
@@ -201,9 +219,15 @@ public class Player {
      * @param direction the direction of the movement
      */
     public void requestMove(Direction direction) {
-        System.out.println("Je demande a bouger vers "+direction);
-        String message = move + " " + String.valueOf(getID()) + " " + direction;
-        requestToChunk(message);
+        if(this.direction != direction) {
+            this.direction = direction;
+            sendTurn(direction);
+        }
+        else {
+            System.out.println("Je demande a bouger vers " + direction);
+            String message = move + " " + String.valueOf(getID()) + " " + direction;
+            requestToChunk(message);
+        }
     }
 
     /**
@@ -222,10 +246,25 @@ public class Player {
      */
     public void requestLeaveGame() {
         unbindQueue(finalPersonalQueueName, ExchangeChunkPlayerName, Integer.toString(getID()));
-        unbindQueue(finalQueuequeueChunkName, ExchangeChunkPlayerName, "Chunk"+currentChunkNumber+"Players");
+        unbindQueue(finalQueuequeueChunkName, ExchangeChunkPlayerName, "Chunk"+currentChunkNumber+".Players");
 
         String message = leave + " " + String.valueOf(getID());
         requestToChunk(message);
+    }
+
+    /**
+     * general methode to send message to current chunk and players
+     *
+     * @param message
+     */
+    private void requestToChunkAndPlayer(String message) {
+        try {
+            chunk.basicPublish(ExchangeChunkPlayerName, "Chunk" + currentChunkNumber+".#", null, message.getBytes(StandardCharsets.UTF_8));
+            chunk.basicPublish(ExchangeChunkPlayerName, "Chunk" + currentChunkNumber+"", null, message.getBytes(StandardCharsets.UTF_8));
+            chunk.basicPublish(ExchangeChunkPlayerName, "Chunk" + currentChunkNumber+".Players", null, message.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -285,25 +324,31 @@ public class Player {
         assert (parser.length > 0);
         String type = parser[0];
         if (type.equals(info_chunk)) {
-            assert (parser.length > 5);
+            assert (parser.length > 6);
             int nb_update = Integer.parseInt(parser[1]);
-            for (int i = 2; (i-2)/4 < nb_update; i += 4) {
+            for (int i = 2; (i-2)/5 < nb_update; i += 5) {
                 if(parser[i].equals("-1")){
                     plateau.addObstacle(Integer.parseInt(parser[i + 2]), Integer.parseInt(parser[i + 3]));
                 }
                 else{
-                    plateau.occupeCase(Integer.parseInt(parser[i + 2]), Integer.parseInt(parser[i + 3]),Integer.parseInt(parser[i]), parser[i+1]);
+                    plateau.occupeCase(Integer.parseInt(parser[i + 2]), Integer.parseInt(parser[i + 3]),Integer.parseInt(parser[i]), parser[i+1],getDirection(parser[i+4]));
                 }
             }
         } else if (type.equals(update)) {
-            assert (parser.length == 5);
+            assert (parser.length == 6);
             plateau.freeUserCase(Integer.parseInt(parser[1]));
             //si il etait deja sur le plateau
-            plateau.occupeCase(Integer.parseInt(parser[3]),Integer.parseInt(parser[4]),Integer.parseInt(parser[1]),parser[2]);
+            plateau.occupeCase(Integer.parseInt(parser[3]),Integer.parseInt(parser[4]),Integer.parseInt(parser[1]),parser[2],getDirection(parser[5]));
         } else if (type.equals(leaving_player)) {
             assert (parser.length == 2);
             if(!plateau.freeUserCase(Integer.parseInt(parser[1]))){
                 System.out.println("fail to purge "+parser[1]);
+            }
+        } else if (type.equals(turn)) {
+            assert (parser.length == 3);
+            System.out.println("je fais tourner un boys");
+            if(!plateau.updateDirection(Integer.parseInt(parser[1]),getDirection(parser[2]))){
+                System.out.println("fail to turn "+parser[1]);
             }
         } else if (type.equals(message_from)) {
             assert (parser.length == 3);
@@ -332,6 +377,10 @@ public class Player {
 
     private String getPseudo() {
         return pseudo;
+    }
+
+    public int getCurrentChunkNumber(){
+        return currentChunkNumber;
     }
 
 
