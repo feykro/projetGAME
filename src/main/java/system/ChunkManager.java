@@ -120,18 +120,33 @@ public class ChunkManager {
             int playerID = Integer.parseInt(parsedMsg[1]);
             int nbChunkCounter = Integer.parseInt(parsedMsg[2]);
 
-            if (nbChunkCounter >= 4) {
-                //TODO : renvoyer au portail que c mor
-                System.out.println("Pas de place disponible \n");
-                return;
-            }
 
-            nbChunkCounter++;
+
             //rechercher une place
             int[] coor = playerSpawnFinder(playerID);
             if (coor[0] == -1) {
                 //TODO
                 //Faut aller chercher une place ailleurs
+                if (nbChunkCounter >= 3) {
+                    System.out.println("Pas de place disponible \n");
+                    try {
+                        String message = fail + " connect";
+                        chunkPlayers.basicPublish(ExchangeChunkPlayerName, Integer.toString(playerID), null, message.getBytes("UTF-8"));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return;
+                }
+                else{
+                    nbChunkCounter++;
+                    String message = find_spawn + " " + playerID + " " + nbChunkCounter;
+                    System.out.println("Sending message : "+message);
+                    try {
+                        sys.basicPublish(ExchangeSysName, "Chunk"+((id+1)%4), null, message.getBytes("UTF-8"));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
                 return;
             } else {
                 System.out.println("On renvoit au joueur la coordonnée " + coor[0] + " : " + coor[1]);
@@ -167,6 +182,7 @@ public class ChunkManager {
             }
             if (parsedMsg[2].equals("0")) {
                 System.out.println("Fail to transfert " + playerID);
+                sendFailToMove(Integer.parseInt(playerID));
                 return;
             }
             pseudoIDmap.remove(playerID);
@@ -234,6 +250,7 @@ public class ChunkManager {
             //todo: occuper la case résultante et libérer l'ancienne
             if (!chunk.isValidMovement(playerID, direction)) {
                 System.out.println(playerID + " cant move toward " + direction);
+                sendFailToMove(playerID);
                 return;
             }
             int newCoor[] = chunk.moveTo(playerID, direction);
@@ -349,6 +366,16 @@ public class ChunkManager {
             e.printStackTrace();
         }
     }
+
+    private void sendFailToMove(int playerID) {
+        String msg = fail + " move";
+        try {
+            chunkPlayers.basicPublish(ExchangeChunkPlayerName, Integer.toString(playerID), null, msg.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void sendTransfertPlayer(int playerID, int[] coor) {
         int id_transfert_chunk = determineTransfertChunkID(coor);

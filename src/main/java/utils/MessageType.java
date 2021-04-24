@@ -15,5 +15,6 @@ public class MessageType {
     public static String find_spawn ="FIND_SPAWN";
     public static String free_ID ="FREE_ID";
     public static String can_enter ="CAN_ENTER";
+    public static String fail ="FAIL";
 
 }

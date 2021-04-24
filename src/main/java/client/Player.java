@@ -2,9 +2,11 @@ package client;
 
 import UI.GraphiqueChunk;
 import com.rabbitmq.client.*;
+import sun.misc.Signal;
 import utils.Chunk;
 import utils.Direction;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -44,6 +46,8 @@ public class Player {
 
     public Player(String pseudo) throws IOException, TimeoutException {
 
+        Signal.handle(new Signal("INT"), signal -> disconnect());
+
         this.pseudo = pseudo;
 
         this.direction = SOUTH;
@@ -68,6 +72,12 @@ public class Player {
         idRequest();
     }
 
+    private void disconnect(){
+        requestLeaveGame();
+        System.exit(0);
+    }
+
+
     /**
      * Initialise the queue to take respond of the request id from portal
      */
@@ -86,6 +96,7 @@ public class Player {
                     String id = new String(delivery.getBody(), "UTF-8");
                     if (checkID(id)) {
                         unbindQueue(finalQueueIDrespondName, ExchangeIDRespondName, "");
+                        finalQueueIDrespondName=null;
                         initPersonalQueueReceiver();
                         spawnRequest();
                     }
@@ -190,6 +201,20 @@ public class Player {
     }
 
     /**
+     * Send fail to connect because all chunk are full
+     */
+    public void sendFull() {
+        try {
+            unbindQueue(finalPersonalQueueName, ExchangeChunkPlayerName, Integer.toString(getID()));
+            String message = fail+" "+id;
+            System.out.println("je dis au portail de reprendre mon id");
+            portailRequest.basicPublish(ExchangePortailRequestName, "Fail", null, message.getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Request to chunk when Player enter in new chunk to signal it
      *
      * @param x coordonate to initial position in the chunk
@@ -245,11 +270,16 @@ public class Player {
      * Request to chunk when Player would leave the game
      */
     public void requestLeaveGame() {
-        unbindQueue(finalPersonalQueueName, ExchangeChunkPlayerName, Integer.toString(getID()));
-        unbindQueue(finalQueuequeueChunkName, ExchangeChunkPlayerName, "Chunk"+currentChunkNumber+".Players");
+        if (finalPersonalQueueName != null)
+            unbindQueue(finalPersonalQueueName, ExchangeChunkPlayerName, Integer.toString(getID()));
+        if (finalQueuequeueChunkName != null){
+            unbindQueue(finalQueuequeueChunkName, ExchangeChunkPlayerName, "Chunk" + currentChunkNumber + ".Players");
+            String message = leave + " " + String.valueOf(getID());
+            requestToChunk(message);
+        }
+        if(finalQueueIDrespondName!=null)
+            unbindQueue(finalQueueIDrespondName, ExchangeIDRespondName, "");
 
-        String message = leave + " " + String.valueOf(getID());
-        requestToChunk(message);
     }
 
     /**
@@ -360,6 +390,23 @@ public class Player {
             plateau.reserveCase(Integer.parseInt(parser[2]),Integer.parseInt(parser[3]),getID());
             initChunkQueueReceiver(Integer.parseInt(parser[1]));
             requestHelloChunk(Integer.parseInt(parser[2]), Integer.parseInt(parser[3]));
+        } else if (type.equals(fail)) {
+            System.out.println("je fail");
+            assert (parser.length == 2);
+            if(parser[1].equals("connect")){
+                JOptionPane.showMessageDialog(ui, "Game is full", "Fail to connect",
+                        JOptionPane.WARNING_MESSAGE);
+                sendFull();
+                System.exit(1);
+
+            }
+            else if(parser[1].equals("move")){
+                System.out.println("fail to move");
+                //todo son qui signal que ca bloque
+            }
+
+            return;
+
         } else {
             System.out.println("Error : In Player Message Type unknown");
         }

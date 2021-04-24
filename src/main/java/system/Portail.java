@@ -37,9 +37,10 @@ public class Portail {
         id_response.exchangeDeclare(ExchangeIDRespondName, BuiltinExchangeType.DIRECT,true);
 
         initIDList();
+        initSysRecepteur();
+        initRecepteurFull();
         initRecepteurIDRequest();
         initRecepteurSpawnRequest();
-        initSysRecepteur();
 
     }
 
@@ -70,6 +71,33 @@ public class Portail {
         }.start();
     }
 
+    private void initRecepteurFull(){
+        String queueSysName = queuePortailRequestIDName;
+        try {
+            queueSysName = id_response.queueDeclare().getQueue();
+            portail_request.queueBind(queueSysName, ExchangePortailRequestName, "Fail");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String finalQueueSysName = queueSysName;
+        new Thread() {
+            public void run() {
+                DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                    String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                    String parser[] = message.split(" ");
+                    assert(parser.length == 2 && parser[0].equals(free_ID));
+                    addFreeID(parser[1]);
+                };
+                try {
+                    portail_request.basicConsume(finalQueueSysName, true, deliverCallback, consumerTag -> {
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
+
     private void initRecepteurSpawnRequest(){
         String queueSysName = queuePortailRequestSpawnName;
         try {
@@ -84,7 +112,7 @@ public class Portail {
                 DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                     String id = new String(delivery.getBody(), StandardCharsets.UTF_8);
                     int managerRDM = Integer.parseInt(id)%4;
-                    String message = find_spawn+" "+id+" "+managerRDM;
+                    String message = find_spawn+" "+id+" "+managerRDM+ " " + 0;
                     System.out.println("Sending message : "+message);
                     sys.basicPublish(ExchangeSysName, "Chunk"+managerRDM, null, message.getBytes("UTF-8"));
                 };
