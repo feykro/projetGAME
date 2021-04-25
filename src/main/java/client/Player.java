@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
+import static java.lang.Math.min;
 import static utils.Direction.SOUTH;
 import static utils.Direction.getDirection;
 import static utils.ExchangeName.*;
@@ -101,6 +102,7 @@ public class Player {
                     if (checkID(id)) {
                         unbindQueue(finalQueueIDrespondName, ExchangeIDRespondName, "");
                         finalQueueIDrespondName=null;
+                        enterPseudo();
                         initPersonalQueueReceiver();
                         spawnRequest();
                     }
@@ -434,5 +436,15 @@ public class Player {
         return currentChunkNumber;
     }
 
+    private void enterPseudo(){
+        String input=JOptionPane.showInputDialog(ui,"Enter Nickname");
+        if(input.equals("")){
+            pseudo+=id;
+        }
+        else{
+            pseudo=input.replaceAll(" ", "_").substring(0,min(input.length(),10));
+        }
+        System.out.println("new pseudo '"+pseudo+"'");
+    }
 
 }

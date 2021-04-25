@@ -115,9 +115,9 @@ public class GraphiqueChunk extends JFrame{
         }
 
         String pseudo = plateau.getCase(x, y).getPlayerPseudo();
-        g.clearRect(locationIMG[0] + 20, locationIMG[1] + 10, pseudo.length() * 12, 20);
+        g.clearRect(locationIMG[0] + 50- pseudo.length()*5, locationIMG[1] + 10, pseudo.length() * 12, 20);
         g.setFont(new Font("Serif", Font.PLAIN, 20));
-        g.drawString(pseudo, locationIMG[0] + 20, locationIMG[1] + 25);
+        g.drawString(pseudo, locationIMG[0] + 50 - pseudo.length()*5, locationIMG[1] + 25);
 
     }
 
