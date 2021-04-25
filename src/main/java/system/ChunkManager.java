@@ -125,7 +125,6 @@ public class ChunkManager {
             //rechercher une place
             int[] coor = playerSpawnFinder(playerID);
             if (coor[0] == -1) {
-                //TODO
                 //Faut aller chercher une place ailleurs
                 if (nbChunkCounter >= 3) {
                     System.out.println("Pas de place disponible \n");
@@ -163,7 +162,6 @@ public class ChunkManager {
             System.out.println("Player " + playerID + " is trying to enter\n");
             //gérer l'arrivée d'un nouveau joueur
             boolean canEnter = playerEnterTester(playerID, coor[0], coor[1]);
-            //todo: renvoyer ça au chunk dont le joueur est originaire
             if (canEnter) {
                 sendHelloPlayer(playerID, coor);
                 sendCanEnter(chunkID, playerID, "1");
@@ -192,15 +190,6 @@ public class ChunkManager {
             }
             return;
         }
-
-        /*
-        if(parsedMsg[0].compareTo(free_ID) == 0){
-            int playerID = Integer.parseInt(parsedMsg[2]);
-            //todo: libérer le joueur auprès du portail
-            chunk.freeUserCase(playerID);
-            return;
-        }
-        */
 
         //return an error
         System.out.println("Error : unexpected system request received.\n");

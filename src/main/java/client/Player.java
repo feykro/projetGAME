@@ -5,6 +5,7 @@ import com.rabbitmq.client.*;
 import sun.misc.Signal;
 import utils.Chunk;
 import utils.Direction;
+import utils.NotificationSound;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -22,6 +23,7 @@ import static utils.MessageType.*;
  */
 public class Player {
 
+    private NotificationSound soundBox;
     private Chunk plateau;
     private GraphiqueChunk ui;
 
@@ -53,6 +55,8 @@ public class Player {
         this.direction = SOUTH;
 
         this.plateau = new Chunk();
+        soundBox = new NotificationSound();
+
 
         this.ui = new GraphiqueChunk(plateau.getTaille(),this);
 
@@ -402,7 +406,7 @@ public class Player {
             }
             else if(parser[1].equals("move")){
                 System.out.println("fail to move");
-                //todo son qui signal que ca bloque
+                soundBox.notification_force();
             }
 
             return;

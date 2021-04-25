@@ -5,7 +5,7 @@ import utils.Chunk;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
-public class startChunkMng {
+public class StartChunkMng {
     public static void main(String[] args) {
         try {
             Chunk k = new Chunk();
