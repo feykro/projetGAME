@@ -102,7 +102,7 @@ public class PlayerReceiver {
     }
 
     /**
-     * Initialise chunk queue  to have message of the chunk where it is currently
+     * Initialise chunk queue to have message of the chunk where it is currently
      */
     public void initChunkQueueReceiver(int chunkNumber) {
         //unbind old chunk queue

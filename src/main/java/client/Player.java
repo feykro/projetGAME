@@ -12,7 +12,6 @@ import utils.NotificationSound;
 
 import javax.swing.*;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
 import static java.lang.Math.min;
@@ -29,18 +28,12 @@ public class Player {
     private final Chunk plateau;
     private final GraphiqueChunk ui;
 
-    private final Channel portailRequest;
-    private final Channel id_response;
-    private final Channel chunk;
-
     private final PlayerSender sender;
     private final PlayerReceiver receiver;
-    private final Connection connection;
     private Direction direction;
     private int currentChunkNumber;
     private String pseudo;
     private int id;
-    private ArrayList<String> listID;
 
     public Player(String pseudo) throws IOException, TimeoutException {
 
@@ -57,10 +50,10 @@ public class Player {
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
-        connection = factory.newConnection();
-        portailRequest = connection.createChannel();
-        chunk = connection.createChannel();
-        id_response = connection.createChannel();
+        Connection connection = factory.newConnection();
+        Channel portailRequest = connection.createChannel();
+        Channel chunk = connection.createChannel();
+        Channel id_response = connection.createChannel();
         portailRequest.exchangeDeclare(ExchangePortailRequestName, BuiltinExchangeType.TOPIC, true);
         id_response.exchangeDeclare(ExchangeIDRespondName, BuiltinExchangeType.DIRECT, true);
         chunk.exchangeDeclare(ExchangeChunkPlayerName, BuiltinExchangeType.TOPIC, true);
@@ -137,7 +130,7 @@ public class Player {
 
         if (this.direction != direction) {
             this.direction = direction;
-            sender.sendTurn(direction);
+            turn(direction);
         } else {
             System.out.println("Je bouge vers " + direction);
             sender.requestMove(direction);
@@ -221,6 +214,7 @@ public class Player {
         String msg = fullmessage.substring(parser[0].length() + parser[1].length() + parser[2].length() + 3);
         System.out.println("-> " + fromPseudo + "("+parser[1]+") : " + msg);
         ui.drawSay(plateau, fromID, msg);
+        soundBox.notification_new_message();
     }
 
     public void manageHelloPlayerMessage(String[] parser) {

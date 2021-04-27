@@ -11,34 +11,30 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.HashMap;
 
 /**
  * Manage graphique interface to show player in the chunk
  */
 
 public class GraphiqueChunk extends JFrame {
-    private int taille;
-    private int casebordersize;
-    private int bordersize = 20;
-    private int barsize = 30;
+    private final int taille;
+    private final int casebordersize;
+    private final int bordersize = 20;
+    private final int barsize = 30;
 
-    private Player player;
+    private final Player player;
     private Chunk plateau;
     private String message = null;
     private int messageFromID = -1;
 
 
-    private Image imgDOWN = Toolkit.getDefaultToolkit().getImage("resources/images/personnage_DOWN.png");
-    private Image imgTOP = Toolkit.getDefaultToolkit().getImage("resources/images/personnage_TOP.png");
-    private Image imgLEFT = Toolkit.getDefaultToolkit().getImage("resources/images/personnage_LEFT.png");
-    private Image imgRIGHT = Toolkit.getDefaultToolkit().getImage("resources/images/personnage_RIGHT.png");
-    private Image imgStone = Toolkit.getDefaultToolkit().getImage("resources/images/cayou.png");
-    private Image imgCross = Toolkit.getDefaultToolkit().getImage("resources/images/lacroix.png");
-    private Image imgGrass;
+    private final Image imgDOWN = Toolkit.getDefaultToolkit().getImage("resources/images/personnage_DOWN.png");
+    private final Image imgTOP = Toolkit.getDefaultToolkit().getImage("resources/images/personnage_TOP.png");
+    private final Image imgLEFT = Toolkit.getDefaultToolkit().getImage("resources/images/personnage_LEFT.png");
+    private final Image imgRIGHT = Toolkit.getDefaultToolkit().getImage("resources/images/personnage_RIGHT.png");
+    private final Image imgStone = Toolkit.getDefaultToolkit().getImage("resources/images/cayou.png");
+    private final Image imgCross = Toolkit.getDefaultToolkit().getImage("resources/images/lacroix.png");
 
-
-    private HashMap<String, int[]> mapPlayer;
 
 
     public GraphiqueChunk(int taille, Player player) {
@@ -80,21 +76,11 @@ public class GraphiqueChunk extends JFrame {
             public void keyReleased(KeyEvent e) {
                 if (player != null) {
                     switch (e.getKeyCode()) {
-                        case KeyEvent.VK_DOWN:
-                            player.move(Direction.SOUTH);
-                            break;
-                        case KeyEvent.VK_UP:
-                            player.move(Direction.NORTH);
-                            break;
-                        case KeyEvent.VK_RIGHT:
-                            player.move(Direction.EAST);
-                            break;
-                        case KeyEvent.VK_LEFT:
-                            player.move(Direction.WEST);
-                            break;
-                        case KeyEvent.VK_SPACE:
-                            player.saySomething("Hey coucou toi !");
-                            break;
+                        case KeyEvent.VK_DOWN -> player.move(Direction.SOUTH);
+                        case KeyEvent.VK_UP -> player.move(Direction.NORTH);
+                        case KeyEvent.VK_RIGHT -> player.move(Direction.EAST);
+                        case KeyEvent.VK_LEFT -> player.move(Direction.WEST);
+                        case KeyEvent.VK_SPACE -> player.saySomething("Hey coucou toi !");
                     }
                 }
             }
@@ -133,28 +119,20 @@ public class GraphiqueChunk extends JFrame {
      */
     public void paint(Graphics g) {
         g.clearRect(0, 0, 900, 900);
-        imgGrass = Toolkit.getDefaultToolkit().getImage("resources/images/grass" + player.getCurrentChunkNumber() + ".png");
+        Image imgGrass = Toolkit.getDefaultToolkit().getImage("resources/images/grass" + player.getCurrentChunkNumber() + ".png");
         if (plateau != null) {
             for (int x = 0; x < taille; x++) {
                 for (int y = 0; y < taille; y++) {
                     g.drawImage(imgGrass, bordersize + x * ((getWidth() - bordersize * 2) / taille), barsize + bordersize + y * ((getHeight() - barsize - bordersize * 2) / taille), this);
                     switch (plateau.getCase(x, y).getEtat()) {
-                        case libre -> {
-                            break;
-                        }
                         case reservee -> {
-                            int locationIMG[] = getLocation(x, y);
+                            int[] locationIMG = getLocation(x, y);
                             g.drawImage(imgCross, locationIMG[0] + 2, locationIMG[1] + 15, this);
-                            break;
                         }
-                        case occupeeJoueur -> {
-                            drawPlayer(g, x, y);
-                            break;
-                        }
+                        case occupeeJoueur -> drawPlayer(g, x, y);
                         case occupeeObstacle -> {
-                            int locationIMG[] = getLocation(x, y);
+                            int[] locationIMG = getLocation(x, y);
                             g.drawImage(imgStone, locationIMG[0] + 2, locationIMG[1] + 15, this);
-                            break;
                         }
                     }
                 }
@@ -175,20 +153,12 @@ public class GraphiqueChunk extends JFrame {
      */
     private void drawPlayer(Graphics g, int x, int y) {
         assert (plateau.getCase(x, y).getEtat() == CaseState.occupeeJoueur);
-        int locationIMG[] = getLocation(x, y);
+        int[] locationIMG = getLocation(x, y);
         switch (plateau.getCase(x, y).getPlayerDirection()) {
-            case SOUTH -> {
-                g.drawImage(imgDOWN, locationIMG[0], locationIMG[1], this);
-            }
-            case NORTH -> {
-                g.drawImage(imgTOP, locationIMG[0], locationIMG[1], this);
-            }
-            case WEST -> {
-                g.drawImage(imgLEFT, locationIMG[0], locationIMG[1], this);
-            }
-            case EAST -> {
-                g.drawImage(imgRIGHT, locationIMG[0], locationIMG[1], this);
-            }
+            case SOUTH -> g.drawImage(imgDOWN, locationIMG[0], locationIMG[1], this);
+            case NORTH -> g.drawImage(imgTOP, locationIMG[0], locationIMG[1], this);
+            case WEST -> g.drawImage(imgLEFT, locationIMG[0], locationIMG[1], this);
+            case EAST -> g.drawImage(imgRIGHT, locationIMG[0], locationIMG[1], this);
         }
 
         String pseudo = plateau.getCase(x, y).getPlayerPseudo();
@@ -222,7 +192,7 @@ public class GraphiqueChunk extends JFrame {
     private void drawMessage(Graphics g) {
         if (message != null) {
             assert (messageFromID != -1);
-            int coor[] = plateau.getCoordoneeCase(messageFromID);
+            int[] coor = plateau.getCoordoneeCase(messageFromID);
             //en haut donc msg sur le coté
             if (coor[0] == 0) {
 
