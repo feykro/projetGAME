@@ -19,7 +19,6 @@ public class ChunkManager {
 
     private int id;
     private Chunk chunk;
-    private int searchCounter = 0;
     private HashMap<String, String> pseudoIDmap;
 
     private Channel chunkPlayers;
@@ -53,6 +52,9 @@ public class ChunkManager {
         initPlayerRecepteur();
     }
 
+    /**
+     * Initialisation des queues servant à la communication entre chunk et avec le portail
+     */
     private void initSysRecepteur() {
         String queueSysName = queueChunkSysBasename + id;
         try {
@@ -82,6 +84,10 @@ public class ChunkManager {
         }.start();
     }
 
+    /**
+     * Initialisation des queues servant à la communication entre le chunk, les joueurs
+     * dont il s'occupe et avec ceux essayant d'entrer dans le chunk
+     */
     private void initPlayerRecepteur() {
         try {
             chunkPlayers.queueDeclare(playerQueueName, true, false, false, null);
@@ -119,8 +125,6 @@ public class ChunkManager {
         if (parsedMsg[0].equals(find_spawn)) {
             int playerID = Integer.parseInt(parsedMsg[1]);
             int nbChunkCounter = Integer.parseInt(parsedMsg[2]);
-
-
 
             //rechercher une place
             int[] coor = playerSpawnFinder(playerID);
@@ -196,16 +200,19 @@ public class ChunkManager {
     }
 
     /**
-     * Function called to react to a player query
+     * Fonction appellée pour gérer les requêtes de joueurs
      */
     private void playerAction(String[] parsedMsg) {
 
+        //Message qu'a envoyé un joueur pour dire au chunk qu'il a changé sa direction
         if(parsedMsg[0].equals(turn)){
             if(!chunk.updateDirection(Integer.parseInt(parsedMsg[1]),getDirection(parsedMsg[2]))){
                 System.out.println("fail to turn "+parsedMsg[1]);
             }
             return;
         }
+
+        //Requête faite par un joueur entrant dans le chunk; il a besoin des informations pour son affichage
         if (parsedMsg[0].equals(hello_chunk)) {
             String playerID = parsedMsg[1];
             String playerPseudo = parsedMsg[2];
@@ -223,33 +230,30 @@ public class ChunkManager {
             return;
         }
 
-
-
+        //Requête d'un joueur pour se déplacer
         if (parsedMsg[0].equals(move)) {
             int playerID = Integer.parseInt(parsedMsg[1]);
             String direction = parsedMsg[2];
             //vérifier si la case résultante est libre
-            //todo: vérifier si on sort du chunk, si oui contacter le chunk approprié
             int[] coor = chunk.getNewCoor(playerID, direction);
             if (coor[0] >= 5 || coor[0] < 0 || coor[1] >= 5 || coor[1] < 0) {
                 sendTransfertPlayer(playerID, coor);
                 return;
             }
 
-            //todo: occuper la case résultante et libérer l'ancienne
             if (!chunk.isValidMovement(playerID, direction)) {
                 System.out.println(playerID + " cant move toward " + direction);
                 sendFailToMove(playerID);
                 return;
             }
+
             int newCoor[] = chunk.moveTo(playerID, direction);
             sendUpdate(parsedMsg[1], pseudoIDmap.get(parsedMsg[1]), newCoor[0], newCoor[1],direction);
             chunk.showChunk();
-            //todo: update player position for everyone
-
             return;
         }
 
+        //Requête d'un joueur pour parler à ce qui lui fait face
         if (parsedMsg[0].equals(say)) {
             int playerID = Integer.parseInt(parsedMsg[1]);
             String direction = parsedMsg[2];
@@ -257,15 +261,15 @@ public class ChunkManager {
             for(int i =3 ; i < parsedMsg.length;i++){
                 message = message+parsedMsg[i]+" ";
             }
-            //todo: check if there's a player in pointed direction
+            //check if there's a player in pointed direction
             int[] coordTalk = chunk.isValidTalk(playerID, direction);
             if(coordTalk[0] != -1){
                 sendMessageFrom(playerID,pseudoIDmap.get(parsedMsg[1]),chunk.getCase(coordTalk[0],coordTalk[1]).getPlayerID(),message);
             }
-            //todo: send message to player
             return;
         }
 
+        //Message du joueur qui indique au jeu qu'il s'apprête à le quitter
         if (parsedMsg[0].equals(leave)) {
             String playerID = parsedMsg[1];
             if (!pseudoIDmap.containsKey(playerID)) {
@@ -280,13 +284,14 @@ public class ChunkManager {
             }
             return;
         }
-        //return an error
+
+        //Cas "default"; on ne comprend pas la requête du joueur
         System.out.println("Error : unexpected player action received :" + parsedMsg[0]);
     }
 
     /**
      * Trouver une place pour le joueur dans le chunk et renvoie la coordonnée
-     * Sinon, renvoie -1, -1
+     * Sinon, renvoie -1, -1. Dans le cas où on trouve la place, on la bloque
      */
     private int[] playerSpawnFinder(int playerID) {
         int[] pos = chunk.findFreeCase();
@@ -297,6 +302,10 @@ public class ChunkManager {
         return pos;
     }
 
+    /**
+     * On test si joueur dans un chunk extérieur peut entrer. Si c'est possible, on répond true et
+     * on réserve la place.
+     */
     private boolean playerEnterTester(int playerID, int x, int y) {
         //On occupe la case avec le joueur
         boolean test = !chunk.getCase(x, y).isOccupied();
@@ -307,6 +316,9 @@ public class ChunkManager {
         return test;
     }
 
+    /**
+     * Envoie les informations sur la disposition du chunk au joueur dont l'id est playerID.
+     */
     private boolean sendInfoChunk(String playerID) {
         String msg = chunk.getInfochunk(Integer.parseInt(playerID));
         System.out.println("Send msg : \n" + msg);
@@ -319,6 +331,9 @@ public class ChunkManager {
         return true;
     }
 
+    /**
+     * Envoie une mise à jour de la disposition du chunk à tous les joueurs présents
+     */
     private void sendUpdate(String playerID, String playerPseudo, int playerX, int playerY,String direction) {
         String msg = update + " " + playerID + " " + playerPseudo + " " + Integer.toString(playerX) + " " + Integer.toString(playerY) + " " +direction;
 
@@ -331,6 +346,9 @@ public class ChunkManager {
         System.out.println("Sent update msg: \n" + msg);
     }
 
+    /**
+     * Envoie une mise à jour aux joueurs dans le cas spécial où un d'entre eux à quitté le chunk/le jeu
+     */
     private void sendLeave(String playerID) {
         String msg = leaving_player + " " + playerID;
         try {
@@ -342,6 +360,9 @@ public class ChunkManager {
         System.out.println("Sent player leaving msg: \n" + msg);
     }
 
+    /**
+     * Dans le cas om un joueur part, tiens le portail au courant qu'un ID est à nouveau disponible
+     */
     private void sendFreeID(String playerID) {
         String msgPortal = MessageType.free_ID + " " + playerID;
         try {
@@ -352,7 +373,9 @@ public class ChunkManager {
         }
     }
 
-
+    /**
+     * Envoie à un joueur un message pour lui dire qu'il l'accepte dans ce chunk
+     */
     private void sendHelloPlayer(int playerID, int[] coor) {
         String msg = hello_player + " " + Integer.toString(this.id) + " " + Integer.toString(coor[0]) + " " + Integer.toString(coor[1]);
         try {
@@ -362,6 +385,10 @@ public class ChunkManager {
         }
     }
 
+    /**
+     * Envoie à un joueur l'information que son mouvement n'est pas possible, ce qui joue un doux son dans ses
+     * chastes oreilles
+     */
     private void sendFailToMove(int playerID) {
         String msg = fail + " move";
         try {
@@ -371,7 +398,9 @@ public class ChunkManager {
         }
     }
 
-
+    /**
+     * Envoie à un autre chunk les informations d'un joueur qui s'en va
+     */
     private void sendTransfertPlayer(int playerID, int[] coor) {
         int id_transfert_chunk = determineTransfertChunkID(coor);
 
@@ -386,6 +415,9 @@ public class ChunkManager {
         }
     }
 
+    /**
+     * Accepte l'entrée d'un joueur dans ce chunk après du chunk émetteur
+     */
     private void sendCanEnter(int chunkID, int playerID, String result) {
         String msg = can_enter + " " + playerID + " " + result;
         try {
@@ -396,6 +428,9 @@ public class ChunkManager {
         }
     }
 
+    /**
+     * Affiche le message qu'un joueur à envoyé à un autre sur l'affichage graphique du récepteur
+     */
     private void sendMessageFrom(int fromID,String fromPseudo,int toID,String message){
         String msg = message_from + " " + Integer.toString(fromID) + " " + fromPseudo + " " + message;
         try {
@@ -405,7 +440,9 @@ public class ChunkManager {
         }
     }
 
-
+    /**
+     * Calcule le chunkManger qui doit reçevoir une demande de transfert quand un joueur essaye de sortir
+     */
     private int determineTransfertChunkID(int[] coor) {
         if (coor[0] >= 5 || coor[0] < 0) {
             if (this.id % 2 == 0) {
