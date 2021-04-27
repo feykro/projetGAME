@@ -32,9 +32,9 @@ public class Portail {
         sys = connection.createChannel();
         id_response = connection.createChannel();
 
-        portail_request.exchangeDeclare(ExchangePortailRequestName, BuiltinExchangeType.TOPIC,true);
-        sys.exchangeDeclare(ExchangeSysName, BuiltinExchangeType.TOPIC,true);
-        id_response.exchangeDeclare(ExchangeIDRespondName, BuiltinExchangeType.DIRECT,true);
+        portail_request.exchangeDeclare(ExchangePortailRequestName, BuiltinExchangeType.TOPIC, true);
+        sys.exchangeDeclare(ExchangeSysName, BuiltinExchangeType.TOPIC, true);
+        id_response.exchangeDeclare(ExchangeIDRespondName, BuiltinExchangeType.DIRECT, true);
 
         initIDList();
         initSysRecepteur();
@@ -45,7 +45,7 @@ public class Portail {
     }
 
 
-    private void initRecepteurIDRequest(){
+    private void initRecepteurIDRequest() {
         String queueSysName = queuePortailRequestIDName;
         try {
             portail_request.queueDeclare(queueSysName, true, false, false, null);
@@ -71,7 +71,7 @@ public class Portail {
         }.start();
     }
 
-    private void initRecepteurFull(){
+    private void initRecepteurFull() {
         String queueSysName = queuePortailRequestIDName;
         try {
             queueSysName = id_response.queueDeclare().getQueue();
@@ -85,7 +85,7 @@ public class Portail {
                 DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                     String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
                     String parser[] = message.split(" ");
-                    assert(parser.length == 2 && parser[0].equals(free_ID));
+                    assert (parser.length == 2 && parser[0].equals(free_ID));
                     addFreeID(parser[1]);
                 };
                 try {
@@ -98,7 +98,7 @@ public class Portail {
         }.start();
     }
 
-    private void initRecepteurSpawnRequest(){
+    private void initRecepteurSpawnRequest() {
         String queueSysName = queuePortailRequestSpawnName;
         try {
             portail_request.queueDeclare(queueSysName, true, false, false, null);
@@ -111,10 +111,10 @@ public class Portail {
             public void run() {
                 DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                     String id = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                    int managerRDM = Integer.parseInt(id)%4;
-                    String message = find_spawn+" "+id+" "+managerRDM+ " " + 0;
-                    System.out.println("Sending message : "+message);
-                    sys.basicPublish(ExchangeSysName, "Chunk"+managerRDM, null, message.getBytes("UTF-8"));
+                    int managerRDM = Integer.parseInt(id) % 4;
+                    String message = find_spawn + " " + id + " " + managerRDM + " " + 0;
+                    System.out.println("Sending message : " + message);
+                    sys.basicPublish(ExchangeSysName, "Chunk" + managerRDM, null, message.getBytes("UTF-8"));
                 };
                 try {
                     sys.basicConsume(finalQueueSysName, true, deliverCallback, consumerTag -> {
@@ -126,7 +126,7 @@ public class Portail {
         }.start();
     }
 
-    private void initSysRecepteur(){
+    private void initSysRecepteur() {
         String queueSysName = queuePortailSysName;
         try {
             sys.queueDeclare(queueSysName, true, false, false, null);
@@ -140,7 +140,7 @@ public class Portail {
                 DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                     String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
                     String parser[] = message.split(" ");
-                    assert(parser.length == 2 && parser[0].equals(free_ID));
+                    assert (parser.length == 2 && parser[0].equals(free_ID));
                     addFreeID(parser[1]);
                 };
                 try {
@@ -153,21 +153,22 @@ public class Portail {
         }.start();
     }
 
-    private void initIDList(){
+    private void initIDList() {
         listID = new ArrayList<String>();
-        for(int i=0; i<16;i++){
+        for (int i = 0; i < 16; i++) {
             addFreeID(Integer.toString(i));
         }
     }
 
-    private String getFreeID(){
-        if(listID.size() > 0){
+    private String getFreeID() {
+        if (listID.size() > 0) {
             return listID.remove(0);
         }
         return "-1";
     }
-    private void addFreeID(String id){
-        System.out.println("Portal: got id : "+id);
+
+    private void addFreeID(String id) {
+        System.out.println("Portal: got id : " + id);
         listID.add(id);
 
     }

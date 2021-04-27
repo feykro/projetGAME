@@ -34,7 +34,12 @@ public class Chunk {
     public boolean isValidMovement(int playerID, String direction){
         int[] coor=getNewCoor(playerID, direction);
         Case c = getCase(coor[0], coor[1]);
-        return !c.isOccupied();
+        if(c != null) {
+            return !c.isOccupied();
+        }
+        else{
+            return false;
+        }
     }
 
     public int[] getNewCoor(int playerID, String direction){
@@ -62,28 +67,12 @@ public class Chunk {
      * return the coordinate of that adjacent player, or -1 -1 if there isn't one
      */
     public int[] isValidTalk(int playerID, String direction){
-        int[] coor = findIDCaseCoor(playerID);
-        int[] res = {-1, -1};
+        int[] coor = getNewCoor(playerID, direction);
         int x = coor[0];
         int y = coor[1];
-        if(direction.equals("NORTH")){
-            x -=1;
-        }else if(direction.equals("SOUTH")){
-            x += 1;
-        }else if(direction.equals("WEST")){
-            y -= 1;
-        }else if(direction.equals("EAST")){
-            y += 1;
-        }else{
-            System.out.println("Direction error: not NORTH/SOUTH/EAST/WEST\n");
-            return res;
-        }
-
-        if(x >= 5 || x<0 || y >= 5 || y<0){
-            return res;
-        }
         Case c = getCase(x, y);
-        if(c.getEtat() == CaseState.occupeeJoueur){
+        int res[] = new int[]{-1, -1};
+        if(c != null && c.getEtat() == CaseState.occupeeJoueur) {
             res[0] = x;
             res[1] = y;
         }
@@ -248,12 +237,17 @@ public class Chunk {
             System.out.println("-");
             for(int j=0; j< taille ; j++) {
                 System.out.print("|");
-                if(getCase(j, i).isOccupied()){
-                    System.out.print("웃");
+                switch(getCase(j,i).getEtat()) {
+                    case occupeeJoueur:
+                            System.out.print("웃");
+                        break;
+                    case occupeeObstacle:
+                            System.out.print("¤");
+                        break;
+                    default:
+                        System.out.print(" ");
                 }
-                else{
-                    System.out.print(" ");
-                }
+
             }
             System.out.println("|");
         }
@@ -287,6 +281,9 @@ public class Chunk {
 
 
     public Case getCase(int x, int y){
+        if(x>=taille || x<0 || y>=taille || y<0){
+            return null;
+        }
         return tab[y*taille + x];
     }
 

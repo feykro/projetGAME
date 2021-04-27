@@ -6,15 +6,15 @@ public enum Direction {
     WEST,
     EAST;
 
-    public static Direction getDirection(String direction){
-        switch (direction.charAt(0)){
-            case 'W' :
+    public static Direction getDirection(String direction) {
+        switch (direction.charAt(0)) {
+            case 'W':
                 return WEST;
-            case 'N' :
+            case 'N':
                 return NORTH;
-            case 'S' :
+            case 'S':
                 return SOUTH;
-            case 'E' :
+            case 'E':
                 return EAST;
             default:
                 throw new IllegalStateException("Unexpected value: " + direction.charAt(0));

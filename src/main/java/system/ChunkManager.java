@@ -253,9 +253,15 @@ public class ChunkManager {
         if (parsedMsg[0].equals(say)) {
             int playerID = Integer.parseInt(parsedMsg[1]);
             String direction = parsedMsg[2];
-            String message = parsedMsg[3];
+            String message ="";
+            for(int i =3 ; i < parsedMsg.length;i++){
+                message = message+parsedMsg[i]+" ";
+            }
             //todo: check if there's a player in pointed direction
             int[] coordTalk = chunk.isValidTalk(playerID, direction);
+            if(coordTalk[0] != -1){
+                sendMessageFrom(playerID,pseudoIDmap.get(parsedMsg[1]),chunk.getCase(coordTalk[0],coordTalk[1]).getPlayerID(),message);
+            }
             //todo: send message to player
             return;
         }
@@ -389,6 +395,16 @@ public class ChunkManager {
             return;
         }
     }
+
+    private void sendMessageFrom(int fromID,String fromPseudo,int toID,String message){
+        String msg = message_from + " " + Integer.toString(fromID) + " " + fromPseudo + " " + message;
+        try {
+            chunkPlayers.basicPublish(ExchangeChunkPlayerName, Integer.toString(toID), null, msg.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private int determineTransfertChunkID(int[] coor) {
         if (coor[0] >= 5 || coor[0] < 0) {
