@@ -58,8 +58,8 @@ public class Player {
         id_response.exchangeDeclare(ExchangeIDRespondName, BuiltinExchangeType.DIRECT, true);
         chunk.exchangeDeclare(ExchangeChunkPlayerName, BuiltinExchangeType.TOPIC, true);
 
-        sender = new PlayerSender(this, portailRequest, id_response, chunk);
-        receiver = new PlayerReceiver(this, portailRequest, id_response, chunk);
+        sender = new PlayerSender(this, portailRequest, chunk);
+        receiver = new PlayerReceiver(this, id_response, chunk);
 
         receiver.initReciveID();
         connect();
@@ -260,7 +260,7 @@ public class Player {
     }
 
     /**
-     * check if id is a real id (>-1 <16) and add save it if it s real
+     * check if id is a real id (less than -1 more than 16) and add save it if it s real
      *
      * @param id
      * @return true if id is real

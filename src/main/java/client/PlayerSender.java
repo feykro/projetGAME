@@ -15,14 +15,12 @@ import static utils.MessageType.*;
  */
 public class PlayerSender {
 
-    private Channel portailRequest;
-    private Channel id_response;
-    private Channel chunk;
-    private Player player;
+    private final Channel portailRequest;
+    private final Channel chunk;
+    private final Player player;
 
-    public PlayerSender(Player player, Channel portailRequest, Channel id_response, Channel chunk) {
+    public PlayerSender(Player player, Channel portailRequest, Channel chunk) {
         this.portailRequest = portailRequest;
-        this.id_response = id_response;
         this.chunk = chunk;
         this.player = player;
     }
@@ -32,7 +30,7 @@ public class PlayerSender {
      */
     public void spawnRequest() {
         try {
-            portailRequest.basicPublish(ExchangePortailRequestName, "SPAWN", null, Integer.toString(player.getID()).getBytes("UTF-8"));
+            portailRequest.basicPublish(ExchangePortailRequestName, "SPAWN", null, Integer.toString(player.getID()).getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
         }

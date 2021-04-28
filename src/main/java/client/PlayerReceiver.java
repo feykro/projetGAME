@@ -16,16 +16,14 @@ import static utils.MessageType.*;
  */
 public class PlayerReceiver {
 
-    private Channel portailRequest;
-    private Channel id_response;
-    private Channel chunk;
+    private final Channel id_response;
+    private final Channel chunk;
     private String finalQueueIDrespondName = null;
     private String finalPersonalQueueName = null;
     private String finalQueuequeueChunkName = null;
-    private Player player;
+    private final Player player;
 
-    public PlayerReceiver(Player player, Channel portailRequest, Channel id_response, Channel chunk) {
-        this.portailRequest = portailRequest;
+    public PlayerReceiver(Player player, Channel id_response, Channel chunk) {
         this.id_response = id_response;
         this.chunk = chunk;
         this.player = player;
@@ -44,26 +42,24 @@ public class PlayerReceiver {
             System.out.println("ERROR : j'ai echoué a m'abonner a la queue "+queueSysName);
         }
         finalQueueIDrespondName = queueSysName;
-        new Thread() {
-            public void run() {
-                DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                    String id = new String(delivery.getBody(), "UTF-8");
-                    if (player.checkID(id)) {
-                        unbindQueue(finalQueueIDrespondName, ExchangeIDRespondName, "");
-                        finalQueueIDrespondName = null;
-                        player.enterPseudo();
-                        initPersonalQueueReceiver();
-                        player.spawn();
-                    }
-                };
-                try {
-                    id_response.basicConsume(finalQueueIDrespondName, true, deliverCallback, consumerTag -> {
-                    });
-                } catch (IOException e) {
-                    e.printStackTrace();
+        new Thread(() -> {
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String id = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                if (player.checkID(id)) {
+                    unbindQueue(finalQueueIDrespondName, ExchangeIDRespondName, "");
+                    finalQueueIDrespondName = null;
+                    player.enterPseudo();
+                    initPersonalQueueReceiver();
+                    player.spawn();
                 }
+            };
+            try {
+                id_response.basicConsume(finalQueueIDrespondName, true, deliverCallback, consumerTag -> {
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }.start();
+        }).start();
     }
 
     /**
@@ -84,21 +80,19 @@ public class PlayerReceiver {
             System.out.println("ERROR : j'ai echoué à m'abonner a la queue "+queuePersonalName);
         }
         finalPersonalQueueName = queuePersonalName;
-        new Thread() {
-            public void run() {
-                DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                    String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                    manageMessage(message);
+        new Thread(() -> {
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                manageMessage(message);
 
-                };
-                try {
-                    chunk.basicConsume(finalPersonalQueueName, true, deliverCallback, consumerTag -> {
-                    });
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            };
+            try {
+                chunk.basicConsume(finalPersonalQueueName, true, deliverCallback, consumerTag -> {
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }.start();
+        }).start();
     }
 
     /**
@@ -121,20 +115,18 @@ public class PlayerReceiver {
             System.out.println("ERROR : j'ai echoué à m'abonner a la queue "+queueChunkName);
         }
         finalQueuequeueChunkName = queueChunkName;
-        new Thread() {
-            public void run() {
-                DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                    String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                    manageMessage(message);
-                };
-                try {
-                    chunk.basicConsume(finalQueuequeueChunkName, true, deliverCallback, consumerTag -> {
-                    });
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        new Thread(() -> {
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                manageMessage(message);
+            };
+            try {
+                chunk.basicConsume(finalQueuequeueChunkName, true, deliverCallback, consumerTag -> {
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }.start();
+        }).start();
     }
 
 

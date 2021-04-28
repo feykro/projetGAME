@@ -2,25 +2,20 @@ package utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 import static utils.Direction.getDirection;
 
+/**
+ * Manage chunk function
+ */
 public class Chunk {
-    private int taille;
-    private Case[] tab;
-    private ArrayList<String> pseudoList;
+    private final int taille;
+    private final Case[] tab;
 
-    public Chunk(int taille){
-        this.taille = taille;
-        tab = new Case[this.taille*this.taille];
-        tabInit();
-    }
-
-    public Chunk(){
+    public Chunk() {
         this.taille = 5;
-        tab = new Case[this.taille*this.taille];
+        tab = new Case[this.taille * this.taille];
         tabInit();
     }
 
@@ -30,90 +25,113 @@ public class Chunk {
      * Checks if the player's movement in Direction is valid. Does not check
      * if the player leaves the area or not. This should be handled by either
      * changing return type to int or include a chunk id in this Class
+     *
+     * @param playerID  player who would move
+     * @param direction the direction of movement
+     * @return if the player can move or not
      */
-    public boolean isValidMovement(int playerID, String direction){
-        int[] coor=getNewCoor(playerID, direction);
+    public boolean isValidMovement(int playerID, String direction) {
+        int[] coor = getNewCoor(playerID, direction);
         Case c = getCase(coor[0], coor[1]);
-        if(c != null) {
+        if (c != null) {
             return !c.isOccupied();
-        }
-        else{
+        } else {
             return false;
         }
     }
 
-    public int[] getNewCoor(int playerID, String direction){
+    /**
+     * get the coordinate if the player move to one case in the direction
+     *
+     * @param playerID  player moving
+     * @param direction direction of movement
+     * @return new coordinate
+     */
+    public int[] getNewCoor(int playerID, String direction) {
         int[] coor = findIDCaseCoor(playerID);
         int x = coor[0];
         int y = coor[1];
-        if(direction.equals("NORTH")){
-            y -=1;
-        }else if(direction.equals("SOUTH")){
-            y += 1;
-        }else if(direction.equals("WEST")){
-            x -= 1;
-        }else if(direction.equals("EAST")){
-            x += 1;
-        }else{
-            System.out.println("Direction error: not NORTH/SOUTH/EAST/WEST\n");
-            return null;
+        switch (direction) {
+            case "NORTH" -> y -= 1;
+            case "SOUTH" -> y += 1;
+            case "WEST" -> x -= 1;
+            case "EAST" -> x += 1;
+            default -> {
+                System.out.println("Direction error: not NORTH/SOUTH/EAST/WEST\n");
+                return null;
+            }
         }
-        return new int[]{x,y};
+        return new int[]{x, y};
 
     }
 
     /**
      * Checks if there's a player in an adjacent tile in Direction of the player
      * return the coordinate of that adjacent player, or -1 -1 if there isn't one
+     *
+     * @param playerID  player who would talk
+     * @param direction the direction talk
+     * @return coordinate of the player to talk or (-1;-1) if player can't talk
      */
-    public int[] isValidTalk(int playerID, String direction){
+    public int[] isValidTalk(int playerID, String direction) {
         int[] coor = getNewCoor(playerID, direction);
         int x = coor[0];
         int y = coor[1];
         Case c = getCase(x, y);
-        int res[] = new int[]{-1, -1};
-        if(c != null && c.getEtat() == CaseState.occupeeJoueur) {
+        int[] res = new int[]{-1, -1};
+        if (c != null && c.getEtat() == CaseState.occupeeJoueur) {
             res[0] = x;
             res[1] = y;
         }
         return res;
     }
 
-    public int[] moveTo(int id,String direction){
+    /**
+     * compute the new coordinate of the player who move at one direction
+     * need to call isValidMovement before to check if the movement is valid
+     *
+     * @param id        player who would move
+     * @param direction the direction of movement
+     * @return new coordinate
+     */
+    public int[] moveTo(int id, String direction) {
         int[] coor = findIDCaseCoor(id);
         int x = coor[0];
         int y = coor[1];
-        String pseudo = getCase(x,y).getPlayerPseudo();
+        String pseudo = getCase(x, y).getPlayerPseudo();
         freeUserCase(id);
-        if(direction.equals("NORTH")){
-            y -=1;
-        }else if(direction.equals("SOUTH")){
-            y += 1;
-        }else if(direction.equals("WEST")){
-            x -= 1;
-        }else if(direction.equals("EAST")){
-            x += 1;
-        }else{
-            System.out.println("Direction error: not NORTH/SOUTH/EAST/WEST\n");
-            return coor;
+        switch (direction) {
+            case "NORTH" -> y -= 1;
+            case "SOUTH" -> y += 1;
+            case "WEST" -> x -= 1;
+            case "EAST" -> x += 1;
+            default -> {
+                System.out.println("Direction error: not NORTH/SOUTH/EAST/WEST\n");
+                return coor;
+            }
         }
-        occupeCase(x,y,id,pseudo,getDirection(direction));
-        return new int[]{x,y};
+        occupeCase(x, y, id, pseudo, getDirection(direction));
+        return new int[]{x, y};
     }
 
-    public String loadRdmSeed(){
-        int seedNumber = (int)(Math.random() * ((11) + 1));
-        String mapName = "seed"+seedNumber+".seed";
-        File fileMap = new File("resources/mapSeed/"+mapName);
+    /**
+     * load a random seed to add obstacle in the chunk
+     *
+     * @return seed name
+     */
+    public String loadRdmSeed() {
+        int seedNumber = (int) (Math.random() * ((11) + 1));
+        String mapName = "seed" + seedNumber + ".seed";
+        File fileMap = new File("resources/mapSeed/" + mapName);
         try {
             Scanner reader = new Scanner(fileMap);
-            for (int i =0; i < taille;i++) {
+            for (int i = 0; i < taille; i++) {
                 String line = reader.nextLine();
-                for(int j =0; j < taille ; j++){
-                    assert(line.length()>= taille);
-                    switch(line.charAt(j)){
+                for (int j = 0; j < taille; j++) {
+                    assert (line.length() >= taille);
+                    switch (line.charAt(j)) {
                         case '1':
-                            addObstacle(j,i);
+                            addObstacle(j, i);
                             break;
                         case '0':
                             break;
@@ -133,12 +151,17 @@ public class Chunk {
 
 //==========- find ... -===========
 
-    public int[] findFreeCase(){
+    /**
+     * get coordonate of free case in the chunk
+     *
+     * @return coordonate of free case or (-1;-1) if all case are full
+     */
+    public int[] findFreeCase() {
         int[] res = {-1, -1};
-        for(int y=0; y<this.taille; y++){
-            for(int x=0; x<this.taille; x++){
+        for (int y = 0; y < this.taille; y++) {
+            for (int x = 0; x < this.taille; x++) {
                 Case current = getCase(x, y);
-                if(!current.isOccupied()){
+                if (!current.isOccupied()) {
                     res[0] = x;
                     res[1] = y;
                     return res;
@@ -148,11 +171,17 @@ public class Chunk {
         return res;
     }
 
-    public Case findIdCase(int id){
-        for(int y=0; y<taille; y++){
-            for(int x=0; x<taille; x++){
+    /**
+     * get coordinate of player in the chunk
+     *
+     * @param id id of the player
+     * @return Case of the player if is in the chunk or null
+     */
+    public Case findIdCase(int id) {
+        for (int y = 0; y < taille; y++) {
+            for (int x = 0; x < taille; x++) {
                 Case c = getCase(x, y);
-                if(c.getEtat()==CaseState.occupeeJoueur && c.getPlayerID() == id){
+                if (c.getEtat() == CaseState.occupeeJoueur && c.getPlayerID() == id) {
                     return c;
                 }
             }
@@ -160,12 +189,18 @@ public class Chunk {
         return null;
     }
 
-    public int[] findIDCaseCoor(int id){
+    /**
+     * get coordinate of player in the chunk
+     *
+     * @param id id of the player
+     * @return coordinate of the player if is in the chunk or (-1;-1)
+     */
+    public int[] findIDCaseCoor(int id) {
         int[] res = {-1, -1};
-        for(int y=0; y<taille; y++){
-            for(int x=0; x<taille; x++){
+        for (int y = 0; y < taille; y++) {
+            for (int x = 0; x < taille; x++) {
                 Case c = getCase(x, y);
-                if(c.getPlayerID() == id){
+                if (c.getPlayerID() == id) {
                     res[0] = x;
                     res[1] = y;
                     return res;
@@ -177,18 +212,31 @@ public class Chunk {
 
 //==========- free ... -============
 
-    public boolean freeCase(int x, int y){
-        if(x<taille && y < taille){
-            getCase(x,y).free();
+    /**
+     * free the case at coordinate
+     *
+     * @param x Case coordinate
+     * @param y case coordinate
+     * @return true if the case exist
+     */
+    public boolean freeCase(int x, int y) {
+        Case caseToFree = getCase(x, y);
+        if (caseToFree != null) {
+            caseToFree.free();
             return true;
         }
         return false;
     }
 
-
-    public boolean freeUserCase(int id){
+    /**
+     * free the case whith the player
+     *
+     * @param id id of the player
+     * @return true if the Case exist
+     */
+    public boolean freeUserCase(int id) {
         Case c = findIdCase(id);
-        if(c == null){
+        if (c == null) {
             return false;
         }
         c.free();
@@ -197,22 +245,52 @@ public class Chunk {
 
 //=========- populate a case -============
 
-    public boolean occupeCase(int x, int y,int id, String pseudo,Direction direction){
-        if(x<taille && y < taille){
-            getCase(x,y).occupe(id,pseudo,direction);
+    /**
+     * occupe the case with the player and his metadata
+     *
+     * @param x         Case coordinate
+     * @param y         case coordinate
+     * @param id        player id
+     * @param pseudo    player pseudo
+     * @param direction player direction
+     * @return true if the Case exist
+     */
+    public boolean occupeCase(int x, int y, int id, String pseudo, Direction direction) {
+        Case caseToOccupe = getCase(x, y);
+        if (caseToOccupe != null) {
+            caseToOccupe.occupe(id, pseudo, direction);
             return true;
         }
         return false;
     }
 
-    public void reserveCase(int x, int y,int id){
+    /**
+     * reserve the case with the player
+     *
+     * @param x  Case coordinate
+     * @param y  case coordinate
+     * @param id player id
+     * @return true if the Case exist
+     */
+    public boolean reserveCase(int x, int y, int id) {
         Case c = getCase(x, y);
-        c.reserve(id);
+        if (c != null) {
+            c.reserve(id);
+            return true;
+        }
+        return false;
     }
 
-    public boolean updateDirection(int id,Direction direction){
+    /**
+     * update the direction of the player
+     *
+     * @param id        player id
+     * @param direction new direction of the player
+     * @return true if the player is in the chunk
+     */
+    public boolean updateDirection(int id, Direction direction) {
         Case c = findIdCase(id);
-        if(c == null){
+        if (c == null) {
             return false;
         }
         c.updatePlayerDirection(direction);
@@ -220,104 +298,120 @@ public class Chunk {
     }
 
     //===========- init -==================
-    public void tabInit(){
-        for(int j=0; j<taille; j++){
-            for(int i=0; i<taille; i++){
+
+    /**
+     * initialise the tab who save the chunk
+     */
+    public void tabInit() {
+        for (int j = 0; j < taille; j++) {
+            for (int i = 0; i < taille; i++) {
                 Case c = new Case();
-                tab[j*taille + i] = c;
+                tab[j * taille + i] = c;
             }
         }
     }
 
-    public void showChunk(){
-        for(int i=0; i< taille ; i++){
-            for(int j=0; j< taille ; j++) {
+    /**
+     * show the chunk in the terminal
+     * '¤'  obstacle case
+     * ' '  empty case
+     * '*'  reserved case
+     * '웃' player case
+     */
+    public void showChunk() {
+        for (int i = 0; i < taille; i++) {
+            for (int j = 0; j < taille; j++) {
                 System.out.print("--");
             }
             System.out.println("-");
-            for(int j=0; j< taille ; j++) {
+            for (int j = 0; j < taille; j++) {
                 System.out.print("|");
-                switch(getCase(j,i).getEtat()) {
-                    case occupeeJoueur:
-                            System.out.print("웃");
-                        break;
-                    case occupeeObstacle:
-                            System.out.print("¤");
-                        break;
-                    default:
-                        System.out.print(" ");
+                switch (getCase(j, i).getEtat()) {
+                    case occupeeJoueur -> System.out.print("웃");
+                    case occupeeObstacle -> System.out.print("¤");
+                    case reservee -> System.out.print("*");
+                    default -> System.out.print(" ");
                 }
 
             }
             System.out.println("|");
         }
-        for(int j=0; j< taille ; j++) {
+        for (int j = 0; j < taille; j++) {
             System.out.print("--");
         }
         System.out.println("-");
     }
 
-    public boolean setCase(int x, int y, Case c){
-        if(x<taille && y < taille){
-            tab[y*taille + x]=c;
-            return true;
-        }
-        return false;
-    }
-
-    public void addObstacle(int x, int y){
+    /**
+     * add an obstacle in the chunk at the coordinate
+     *
+     * @param x coordinate
+     * @param y coordinate
+     * @return true if the Case exist
+     */
+    public boolean addObstacle(int x, int y) {
         Case c = getCase(x, y);
+        if (c == null) {
+            return false;
+        }
         c.setObstacle();
-    }
-
-    public int[] getCoordoneeCase(int id){
-        for(int i =0 ; i < taille*taille;i++){
-            if(tab[i].getEtat()==CaseState.occupeeJoueur && tab[i].getPlayerID()== id){
-                return new int[]{i/taille,i%taille};
-            }
-        }
-        return null;
+        return true;
     }
 
 
-    public Case getCase(int x, int y){
-        if(x>=taille || x<0 || y>=taille || y<0){
-            return null;
-        }
-        return tab[y*taille + x];
-    }
 
     /* ======================================
     =       getter and setter methods       =
     ========================================= */
 
+    /**
+     * get size of chunk
+     *
+     * @return size of chunk
+     */
     public int getTaille() {
         return taille;
     }
 
-    public Case[] getTab() {
-        return tab;
+    /**
+     * get case at coordinate
+     *
+     * @param x coordinate
+     * @param y coordinate
+     * @return Case if exist else null
+     */
+    public Case getCase(int x, int y) {
+        if (x >= taille || x < 0 || y >= taille || y < 0) {
+            return null;
+        }
+        return tab[y * taille + x];
     }
 
-    public String getInfochunk(int playerID){
-        String info = "";
+    /**
+     * build the message info_chunk based on the chunk without player in parameter
+     *
+     * @param playerID id player
+     * @return string message
+     */
+    public String getInfochunk(int playerID) {
+        StringBuilder info = new StringBuilder();
         int cmt = 0;
-        for(int x=0; x<this.taille; x++){
-            for(int y=0; y<this.taille; y++){
+        for (int x = 0; x < this.taille; x++) {
+            for (int y = 0; y < this.taille; y++) {
                 Case c = getCase(x, y);
-                if(c.getEtat() == CaseState.occupeeJoueur && c.getPlayerID() != playerID){
-                    String id = Integer.toString(c.getPlayerID()) + " ";
+                if (c.getEtat() == CaseState.occupeeJoueur && c.getPlayerID() != playerID) {
+                    String id = c.getPlayerID() + " ";
                     String pseudo = c.getPlayerPseudo() + " ";
-                    info = info + " " + id + pseudo + Integer.toString(x) + " " + Integer.toString(y) + " " + c.getPlayerDirection();
+                    info.append(" ").append(id).append(pseudo).append(x).append(" ").append(y).append(" ").append(c.getPlayerDirection());
                     cmt++;
-                }else if(c.getEtat() == CaseState.occupeeObstacle){
+                } else if (c.getEtat() == CaseState.occupeeObstacle) {
                     String id = "-1 ";
                     String pseudo = "obstacle ";
-                    info = info + " " + id + pseudo + Integer.toString(x) + " " + Integer.toString(y)+ " SOUTH";
+                    info.append(" ").append(id).append(pseudo).append(x).append(" ").append(y).append(" SOUTH");
                     cmt++;
                 }
             }
         }
-        return MessageType.info_chunk + " " + Integer.toString(cmt) +info;
+        return MessageType.info_chunk + " " + cmt + info;
     }
 }

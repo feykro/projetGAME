@@ -64,10 +64,10 @@ public class GraphiqueChunk extends JFrame {
     /**
      * initialise listener to manage keyinput to moove and send message
      * moove or turn at
-     * < left
-     * > right
-     * ^ top
-     * v down
+     * {@literal'<'} left
+     * {@literal'>'} right
+     * {@literal'^'} top
+     * {@literal'v'} down
      * SPACE send message in your current direction
      */
     private void initListener() {
@@ -192,7 +192,7 @@ public class GraphiqueChunk extends JFrame {
     private void drawMessage(Graphics g) {
         if (message != null) {
             assert (messageFromID != -1);
-            int[] coor = plateau.getCoordoneeCase(messageFromID);
+            int[] coor = plateau.findIDCaseCoor(messageFromID);
             //en haut donc msg sur le coté
             if (coor[0] == 0) {
 

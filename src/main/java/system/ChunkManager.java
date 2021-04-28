@@ -15,18 +15,19 @@ import static utils.ExchangeName.*;
 import static utils.MessageType.*;
 import static utils.QueueName.queueChunkSysBasename;
 
+/**
+ * Manage chunk
+ */
 public class ChunkManager {
 
-    private int id;
-    private Chunk chunk;
-    private HashMap<String, String> pseudoIDmap;
+    private final int id;
+    private final Chunk chunk;
+    private final HashMap<String, String> pseudoIDmap;
 
-    private Channel chunkPlayers;
-    private Channel sys;
-    private String playerQueueName;
-    private String chunkTopic;
-
-    private Connection connection;
+    private final Channel chunkPlayers;
+    private final Channel sys;
+    private final String playerQueueName;
+    private final String chunkTopic;
 
     public ChunkManager(Chunk chk, int ayedi) throws IOException, TimeoutException {
         this.id = ayedi;
@@ -41,7 +42,7 @@ public class ChunkManager {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
 
-        connection = factory.newConnection();
+        Connection connection = factory.newConnection();
         sys = connection.createChannel();
         chunkPlayers = connection.createChannel();
 
@@ -64,24 +65,21 @@ public class ChunkManager {
             e.printStackTrace();
         }
 
-        String finalQueueSysName = queueSysName;
-        new Thread() {
-            public void run() {
-                DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                    String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                    System.out.println("je recois du systeme : " + message);
-                    String parsedMessage[] = message.split(" ");
-                    //APPEL DE FONCTION POUR GÉRER CE QU'IL SE PASSE
-                    sysAction(parsedMessage);
-                };
-                try {
-                    sys.basicConsume(finalQueueSysName, true, deliverCallback, consumerTag -> {
-                    });
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        new Thread(() -> {
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                System.out.println("je recois du systeme : " + message);
+                String[] parsedMessage = message.split(" ");
+                //APPEL DE FONCTION POUR GÉRER CE QU'IL SE PASSE
+                sysAction(parsedMessage);
+            };
+            try {
+                sys.basicConsume(queueSysName, true, deliverCallback, consumerTag -> {
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }.start();
+        }).start();
     }
 
     /**
@@ -96,24 +94,21 @@ public class ChunkManager {
             e.printStackTrace();
         }
 
-        String finalQueuePlayerName = playerQueueName;
-        new Thread() {
-            public void run() {
-                DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                    String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                    System.out.println("je recois des joueurs : " + message);
-                    String parsedMessage[] = message.split(" ");
-                    //APPEL DE FONCTION POUR GÉRER CE QU'IL SE PASSE
-                    playerAction(parsedMessage);
-                };
-                try {
-                    chunkPlayers.basicConsume(finalQueuePlayerName, true, deliverCallback, consumerTag -> {
-                    });
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        new Thread(() -> {
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                System.out.println("je recois des joueurs : " + message);
+                String[] parsedMessage = message.split(" ");
+                //APPEL DE FONCTION POUR GÉRER CE QU'IL SE PASSE
+                playerAction(parsedMessage);
+            };
+            try {
+                chunkPlayers.basicConsume(playerQueueName, true, deliverCallback, consumerTag -> {
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }.start();
+        }).start();
     }
 
     /**
@@ -134,7 +129,7 @@ public class ChunkManager {
                     System.out.println("Pas de place disponible \n");
                     try {
                         String message = fail + " connect";
-                        chunkPlayers.basicPublish(ExchangeChunkPlayerName, Integer.toString(playerID), null, message.getBytes("UTF-8"));
+                        chunkPlayers.basicPublish(ExchangeChunkPlayerName, Integer.toString(playerID), null, message.getBytes(StandardCharsets.UTF_8));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -145,23 +140,22 @@ public class ChunkManager {
                     String message = find_spawn + " " + playerID + " " + nbChunkCounter;
                     System.out.println("Sending message : "+message);
                     try {
-                        sys.basicPublish(ExchangeSysName, "Chunk"+((id+1)%4), null, message.getBytes("UTF-8"));
+                        sys.basicPublish(ExchangeSysName, "Chunk"+((id+1)%4), null, message.getBytes(StandardCharsets.UTF_8));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
-                return;
             } else {
                 System.out.println("On renvoit au joueur la coordonnée " + coor[0] + " : " + coor[1]);
                 sendHelloPlayer(playerID, coor);
-                return;
             }
+            return;
         }
 
         if (parsedMsg[0].compareTo(player_Enter) == 0) {
             int chunkID = Integer.parseInt(parsedMsg[1]);
             int playerID = Integer.parseInt(parsedMsg[2]);
-            int coor[] = {Integer.parseInt(parsedMsg[3]), Integer.parseInt(parsedMsg[4])};
+            int[] coor = {Integer.parseInt(parsedMsg[3]), Integer.parseInt(parsedMsg[4])};
 
             System.out.println("Player " + playerID + " is trying to enter\n");
             //gérer l'arrivée d'un nouveau joueur
@@ -247,7 +241,7 @@ public class ChunkManager {
                 return;
             }
 
-            int newCoor[] = chunk.moveTo(playerID, direction);
+            int[] newCoor = chunk.moveTo(playerID, direction);
             sendUpdate(parsedMsg[1], pseudoIDmap.get(parsedMsg[1]), newCoor[0], newCoor[1],direction);
             chunk.showChunk();
             return;
@@ -257,14 +251,14 @@ public class ChunkManager {
         if (parsedMsg[0].equals(say)) {
             int playerID = Integer.parseInt(parsedMsg[1]);
             String direction = parsedMsg[2];
-            String message ="";
+            StringBuilder message = new StringBuilder();
             for(int i =3 ; i < parsedMsg.length;i++){
-                message = message+parsedMsg[i]+" ";
+                message.append(parsedMsg[i]).append(" ");
             }
             //check if there's a player in pointed direction
             int[] coordTalk = chunk.isValidTalk(playerID, direction);
             if(coordTalk[0] != -1){
-                sendMessageFrom(playerID,pseudoIDmap.get(parsedMsg[1]),chunk.getCase(coordTalk[0],coordTalk[1]).getPlayerID(),message);
+                sendMessageFrom(playerID,pseudoIDmap.get(parsedMsg[1]),chunk.getCase(coordTalk[0],coordTalk[1]).getPlayerID(), message.toString());
             }
             return;
         }
@@ -335,7 +329,7 @@ public class ChunkManager {
      * Envoie une mise à jour de la disposition du chunk à tous les joueurs présents
      */
     private void sendUpdate(String playerID, String playerPseudo, int playerX, int playerY,String direction) {
-        String msg = update + " " + playerID + " " + playerPseudo + " " + Integer.toString(playerX) + " " + Integer.toString(playerY) + " " +direction;
+        String msg = update + " " + playerID + " " + playerPseudo + " " + playerX + " " + playerY + " " +direction;
 
         try {
             chunkPlayers.basicPublish(ExchangeChunkPlayerName, "Chunk" + id + ".Players", null, msg.getBytes(StandardCharsets.UTF_8));
@@ -369,7 +363,6 @@ public class ChunkManager {
             sys.basicPublish(ExchangeSysName, "Portail", null, msgPortal.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
-            return;
         }
     }
 
@@ -377,7 +370,7 @@ public class ChunkManager {
      * Envoie à un joueur un message pour lui dire qu'il l'accepte dans ce chunk
      */
     private void sendHelloPlayer(int playerID, int[] coor) {
-        String msg = hello_player + " " + Integer.toString(this.id) + " " + Integer.toString(coor[0]) + " " + Integer.toString(coor[1]);
+        String msg = hello_player + " " + this.id + " " + coor[0] + " " + coor[1];
         try {
             chunkPlayers.basicPublish(ExchangeChunkPlayerName, Integer.toString(playerID), null, msg.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
@@ -411,7 +404,6 @@ public class ChunkManager {
             sys.basicPublish(ExchangeSysName, "Chunk" + id_transfert_chunk, null, msg.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
-            return;
         }
     }
 
@@ -424,7 +416,6 @@ public class ChunkManager {
             sys.basicPublish(ExchangeSysName, "Chunk" + chunkID, null, msg.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
-            return;
         }
     }
 
@@ -432,7 +423,7 @@ public class ChunkManager {
      * Affiche le message qu'un joueur à envoyé à un autre sur l'affichage graphique du récepteur
      */
     private void sendMessageFrom(int fromID,String fromPseudo,int toID,String message){
-        String msg = message_from + " " + Integer.toString(fromID) + " " + fromPseudo + " " + message;
+        String msg = message_from + " " + fromID + " " + fromPseudo + " " + message;
         try {
             chunkPlayers.basicPublish(ExchangeChunkPlayerName, Integer.toString(toID), null, msg.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
