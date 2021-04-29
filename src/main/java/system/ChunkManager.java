@@ -115,7 +115,6 @@ public class ChunkManager {
      * Function called to react to a system query
      */
     private void sysAction(String[] parsedMsg) {
-        System.out.println("Coucou jean mich");
 
         if (parsedMsg[0].equals(find_spawn)) {
             int playerID = Integer.parseInt(parsedMsg[1]);
