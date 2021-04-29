@@ -194,11 +194,11 @@ public class GraphiqueChunk extends JFrame {
             assert (messageFromID != -1);
             int[] coor = plateau.findIDCaseCoor(messageFromID);
             //en haut donc msg sur le coté
-            if (coor[0] == 0) {
+            if (coor[1] == 0) {
 
                 //gauche
-                if (coor[1] == plateau.getTaille() - 1) {
-                    coor = getLocation(coor[1] - 1, coor[0]);
+                if (coor[0] == plateau.getTaille() - 1) {
+                    coor = getLocation(coor[0] - 1, coor[1]);
                     g.clearRect(coor[0] + 50 - message.length() * 5, coor[1] + 20, message.length() * 11, 20);
                     g.drawRoundRect(coor[0] + 50 - message.length() * 5, coor[1] + 20, message.length() * 11, 20, 3, 3);
                     g.setColor(Color.white);
@@ -211,7 +211,7 @@ public class GraphiqueChunk extends JFrame {
                 }
                 //droite
                 else {
-                    coor = getLocation(coor[1] + 1, coor[0]);
+                    coor = getLocation(coor[0] + 1, coor[1]);
                     g.setColor(Color.white);
                     g.fillPolygon(new int[]{coor[0] - 70, coor[0] - 30, coor[0] - 30, coor[0] - 70}, new int[]{coor[1] + 30, coor[1] + 25, coor[1] + 35, coor[1] + 30}, 4);
                     g.clearRect(coor[0] - 30, coor[1] + 20, message.length() * 11, 20);
@@ -224,7 +224,7 @@ public class GraphiqueChunk extends JFrame {
             }
             //msg en haut
             else {
-                coor = getLocation(coor[1], coor[0]);
+                coor = getLocation(coor[0], coor[1]);
                 g.clearRect(coor[0] + 50 - message.length() * 5, coor[1] - 40, message.length() * 11, 20);
                 g.drawRoundRect(coor[0] + 50 - message.length() * 5, coor[1] - 40, message.length() * 11, 20, 3, 3);
                 g.setColor(Color.white);
